@@ -221,6 +221,21 @@ set GH_TOKEN=ghp_xxxxx
 npm run release
 ```
 
+### gh を使う方法（v1.7.0 で使用・GH_TOKEN 不要）
+
+この PC には GitHub CLI（gh）が入っていて、Luca3YT でログイン済み（2026-10-14〜）。
+
+```bash
+npm run build
+# dist の "ReactionMilestone Setup x.y.z.exe" はスペース入りなので、latest.yml に合わせて
+# "ReactionMilestone-Setup-x.y.z.exe"（.blockmap も同様）にリネームしてからアップロードする
+gh release create vX.Y.Z --repo Luca3YT/YRCM --target main --title "X.Y.Z" --notes-file notes.md --latest ReactionMilestone-Setup-X.Y.Z.exe ReactionMilestone-Setup-X.Y.Z.exe.blockmap latest.yml
+```
+
+この方法なら最初から公開状態になる（Draft にならない）。
+
+### npm run release を使う方法
+
 リリース後、https://github.com/Luca3yt/YRCM/releases で **Draft を Publish する**。
 Draft のままだと自動アップデートが動かない。
 
