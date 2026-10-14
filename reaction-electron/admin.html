@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' blob: ws://localhost:* http://localhost:* https://fonts.googleapis.com https://fonts.gstatic.com https://i.ytimg.com">
+<title>ReactionMilestone</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Bebas+Neue&display=swap');
+:root{--bg:#0d0d14;--card:#16161f;--card2:#1c1c28;--border:rgba(255,255,255,.07);--accent:#ff4d00;--gold:#ffd700;--green:#00e676;--red:#ff1744;--text:rgba(255,255,255,.85);--sub:rgba(255,255,255,.35)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none}
+#titlebar{height:32px;background:#0a0a10;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;-webkit-app-region:drag;flex-shrink:0;gap:8px}
+.app-title{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,.4);flex:1}
+.win-btn{-webkit-app-region:no-drag;width:28px;height:22px;border:none;border-radius:4px;cursor:pointer;font-size:11px;background:transparent;color:rgba(255,255,255,.4);transition:background .15s,color .15s;display:flex;align-items:center;justify-content:center}
+.win-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.win-btn.close:hover{background:var(--red);color:#fff}
+/* ── 接続成功ポップアップ ── */
+#connect-popup{position:fixed;top:48px;left:50%;transform:translateX(-50%) translateY(-20px);width:420px;background:#16161f;border:1px solid rgba(0,230,118,.25);border-radius:16px;padding:16px 20px;box-shadow:0 20px 60px rgba(0,0,0,.8);opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;z-index:999}
+#connect-popup.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.cp-inner{display:flex;align-items:center;gap:12px}
+#cp-thumb{width:64px;height:36px;border-radius:6px;background:#222;object-fit:cover;flex-shrink:0}
+#cp-title{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cp-channel{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px}
+.cp-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);border-radius:12px;padding:3px 10px;font-size:10px;font-weight:700;color:#00e676;margin-top:6px;letter-spacing:1px}
+@keyframes blink{50%{opacity:.3}}
+/* アップデート後チェンジログポップアップ */
+#update-popup{position:fixed;top:48px;left:50%;transform:translateX(-50%) translateY(-20px);width:460px;background:#16161f;border:1px solid rgba(100,180,255,.25);border-radius:16px;padding:20px 22px;box-shadow:0 20px 60px rgba(0,0,0,.8);opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;z-index:998}
+#update-popup.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.up-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.up-badge{background:rgba(100,180,255,.12);border:1px solid rgba(100,180,255,.3);border-radius:10px;padding:4px 12px;font-size:11px;font-weight:700;color:#64b4ff;letter-spacing:1px}
+.up-title{font-size:14px;font-weight:700;color:#fff}
+.up-notes{font-size:11px;color:rgba(255,255,255,.6);line-height:1.75;max-height:150px;overflow-y:auto;white-space:pre-wrap;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;margin-bottom:14px}
+.up-close{width:100%;padding:8px;background:rgba(100,180,255,.1);border:1px solid rgba(100,180,255,.25);border-radius:9px;color:#64b4ff;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s}
+.up-close:hover{background:rgba(100,180,255,.2)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+/* ── 上部固定バナー ── */
+#stream-banner{background:#12121c;border-bottom:1px solid var(--border);padding:7px 16px;display:none;align-items:center;gap:10px;flex-shrink:0}
+#stream-banner.visible{display:flex}
+/* 視聴者数クリックでグラフ展開 */
+#sb-viewers{cursor:pointer;transition:opacity .15s}
+#sb-viewers:hover{opacity:.75}
+/* グラフパネル */
+#viewers-graph-panel{background:#0e0e18;border-bottom:1px solid var(--border);overflow:hidden;max-height:0;transition:max-height .35s ease}
+#viewers-graph-panel.open{max-height:180px}
+#viewers-graph-wrap{padding:10px 16px 8px;height:160px;position:relative}
+#viewers-canvas{width:100%;height:100%;display:block}
+.graph-label{position:absolute;font-size:9px;color:rgba(255,255,255,.25);font-family:monospace}
+#graph-title{top:10px;left:16px;font-size:10px;color:rgba(255,255,255,.4)}
+#graph-close{top:10px;right:16px;font-size:10px;color:rgba(255,255,255,.3);cursor:pointer}
+#graph-close:hover{color:rgba(255,255,255,.6)}
+#sb-thumb{width:42px;height:24px;border-radius:3px;background:#222;object-fit:cover;flex-shrink:0}
+#sb-title{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+#sb-channel{font-size:10px;color:var(--sub);margin-top:1px}
+#sb-viewers{margin-left:auto;font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px;flex-shrink:0}
+#content{flex:1;overflow:auto;padding:12px;display:grid;grid-template-columns:repeat(2,minmax(360px,1fr));gap:10px;align-content:start}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;transition:opacity .2s,transform .2s;min-width:360px}
+.card.dragging{opacity:.4;transform:scale(.97)}
+.card.drag-over{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,77,0,.25)}
+.card-drag-handle{position:absolute;top:10px;right:10px;font-size:12px;color:rgba(255,255,255,.15);cursor:grab;user-select:none;padding:2px 4px;border-radius:4px;transition:color .15s}
+.card-drag-handle:hover{color:rgba(255,255,255,.4)}
+.card{position:relative}
+.full-width{grid-column:1/-1}
+.card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--sub);margin-bottom:10px}
+.url-wrap{display:flex;gap:8px;position:relative}
+#live-url{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:var(--text);padding:8px 12px;font-size:12px;font-family:monospace;outline:none;transition:border .2s;user-select:text}
+#live-url:focus{border-color:var(--accent)}
+#live-url::placeholder{color:rgba(255,255,255,.18)}
+#url-history{position:absolute;top:calc(100% + 4px);left:0;right:80px;background:var(--card2);border:1px solid rgba(255,255,255,.12);border-radius:10px;z-index:100;overflow:hidden;display:none;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+#url-history.show{display:block}
+.history-item{padding:8px 12px;font-size:11px;font-family:monospace;color:rgba(255,255,255,.6);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .1s}
+.history-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.history-empty{padding:10px 12px;font-size:11px;color:var(--sub);text-align:center}
+.btn{border:none;border-radius:9px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:all .15s;white-space:nowrap;user-select:none}
+.btn:disabled{opacity:.4;cursor:default}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover:not(:disabled){background:#ff6b35}
+.btn-danger{background:rgba(255,23,68,.15);border:1px solid rgba(255,23,68,.3);color:var(--red)}
+.btn-danger:hover:not(:disabled){background:rgba(255,23,68,.28)}
+.btn-ghost{background:rgba(255,255,255,.05);border:1px solid var(--border);color:rgba(255,255,255,.6)}
+.btn-ghost:hover:not(:disabled){background:rgba(255,255,255,.1);color:#fff}
+#status-badge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;background:rgba(255,255,255,.04);border:1px solid var(--border);transition:all .3s}
+#status-badge.connected{background:rgba(0,230,118,.08);border-color:rgba(0,230,118,.25);color:var(--green)}
+#status-badge.connecting{background:rgba(255,200,0,.08);border-color:rgba(255,200,0,.25);color:#ffd700}
+#status-badge.error{background:rgba(255,23,68,.08);border-color:rgba(255,23,68,.25);color:var(--red)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.dot.blink{animation:blink 1s infinite}
+.btn-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.big-count{margin:4px 0 6px;font-family:'Bebas Neue',sans-serif;font-size:60px;line-height:1;color:#fff;text-shadow:0 0 30px rgba(255,150,0,.25);transition:color .2s}
+.big-count.bump{color:var(--gold)}
+.count-sub{font-size:11px;color:var(--sub);margin-top:4px;letter-spacing:1px}
+.obs-url-box{display:flex;align-items:center;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;padding:8px 12px;gap:8px;margin-top:4px;cursor:pointer;transition:background .15s}
+.obs-url-box:hover{background:rgba(255,255,255,.08)}
+.obs-url-text{flex:1;font-family:monospace;font-size:11px;color:rgba(255,255,255,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;user-select:text}
+.obs-hint{font-size:10px;color:var(--sub);margin-top:3px}
+.test-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.test-grid .btn{padding:7px 4px;font-size:11px}
+/* ログカードは通常カードと同じグリッドに入る */
+/* log-box は .card に統合 */
+.log-box-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--sub);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.log-scroll{font-family:monospace;font-size:11px;color:var(--sub);height:120px;min-height:60px;max-height:500px;overflow:auto;line-height:1.65;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;resize:vertical;width:100%;min-width:0;box-sizing:border-box;contain:strict}
+.log-scroll::-webkit-resizer{background:rgba(255,255,255,.08);border-radius:0 0 6px 0}
+.log-resize-hint{font-size:9px;color:rgba(255,255,255,.15);text-align:right;margin-top:2px;letter-spacing:.5px;user-select:none}
+.e-reaction{color:#ff9500}.e-milestone{color:var(--gold);font-weight:700}.e-error{color:var(--red)}.e-connected{color:var(--green)}.e-info{color:var(--sub)}
+.rxlog-entry{color:rgba(255,149,0,.8)}.rxlog-milestone{color:var(--gold);font-weight:700}
+/* サマリーモーダル */
+#summary-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;pointer-events:none;transition:opacity .3s}
+#summary-modal.show{opacity:1;pointer-events:auto}
+.summary-box{background:#16161f;border:1px solid rgba(255,215,0,.2);border-radius:20px;padding:28px 32px;width:520px;max-height:80vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.8)}
+.summary-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--gold);margin-bottom:4px}
+.summary-sub{font-size:11px;color:var(--sub);margin-bottom:20px}
+.summary-stat{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.summary-stat:last-of-type{border-bottom:none}
+.summary-stat-label{font-size:11px;color:var(--sub)}
+.summary-stat-value{font-size:16px;font-weight:700;color:#fff}
+.summary-milestones{margin:16px 0;padding:12px;background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.1);border-radius:10px;font-size:11px;color:rgba(255,255,255,.6);line-height:1.8}
+.summary-discord{margin-top:16px;background:rgba(88,101,242,.1);border:1px solid rgba(88,101,242,.25);border-radius:10px;padding:12px 14px;font-size:11px;font-family:monospace;color:rgba(255,255,255,.7);white-space:pre-wrap;line-height:1.7;max-height:180px;overflow-y:auto;cursor:pointer;transition:background .15s}
+.summary-discord:hover{background:rgba(88,101,242,.18)}
+.summary-btn-row{display:flex;gap:8px;margin-top:14px}
+/* コマンドリスト */
+/* 目標モーダル */
+#goal-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;pointer-events:none;transition:opacity .25s}
+#goal-modal.show{opacity:1;pointer-events:auto}
+.goal-modal-box{background:#16161f;border:1px solid rgba(255,214,0,.18);border-radius:18px;padding:24px 28px;width:400px;max-height:70vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.8)}
+.goal-modal-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.goal-modal-close{background:none;border:none;color:rgba(255,255,255,.3);font-size:18px;cursor:pointer;line-height:1;padding:0}
+.goal-modal-close:hover{color:#fff}
+.goal-modal-list{flex:1;overflow-y:auto;margin-bottom:14px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent}
+.goal-modal-item{display:flex;align-items:center;justify-content:space-between;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.05)}
+.goal-modal-item:last-child{border-bottom:none}
+.goal-modal-val{font-size:14px;font-weight:700;color:#fff}
+.goal-modal-add{display:flex;gap:8px}
+/* 音量スライダー */
+.volume-row{display:flex;align-items:center;gap:10px}
+input[type=range].volume-slider{flex:1;accent-color:#64b4ff;cursor:pointer;height:4px}
+.volume-val{font-size:11px;color:#fff;min-width:32px;text-align:right;font-family:monospace}
+#sound-select option{background:#1e1e2e;color:#fff}
+/* 目標カード */
+.goal-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);position:relative}
+.goal-item:last-of-type{border-bottom:none}
+.goal-status-badge{font-size:10px;font-weight:700;letter-spacing:1px;padding:2px 8px;border-radius:6px;flex-shrink:0;min-width:58px;text-align:center}
+.goal-status-badge.cleared{background:rgba(0,230,118,.12);color:#00e676;border:1px solid rgba(0,230,118,.25)}
+.goal-status-badge.active{background:rgba(255,214,0,.12);color:#ffd600;border:1px solid rgba(255,214,0,.25);animation:pulse-gold .8s infinite}
+.goal-status-badge.next{background:rgba(100,180,255,.08);color:#64b4ff;border:1px solid rgba(100,180,255,.18)}
+.goal-status-badge.upcoming{background:rgba(255,255,255,.04);color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.08)}
+@keyframes pulse-gold{50%{opacity:.6}}
+.goal-value{font-size:15px;font-weight:700;color:#fff;min-width:60px}
+.goal-value.cleared{color:rgba(255,255,255,.35);text-decoration:line-through}
+.goal-progress-wrap{flex:1;min-width:0}
+.goal-progress-text{font-size:10px;color:var(--sub);margin-bottom:4px}
+.goal-progress-bar{height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.goal-progress-fill{height:100%;background:linear-gradient(90deg,#ffd600,#ff6d00);border-radius:2px;transition:width .5s}
+.goal-del-btn{background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:14px;padding:0 4px;line-height:1;flex-shrink:0;transition:color .15s}
+.goal-del-btn:hover{color:var(--red)}
+.goal-add-row{display:flex;gap:8px;margin-top:12px}
+.goal-add-input{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:#fff;font-size:12px;outline:none;transition:border .15s}
+.goal-add-input:focus{border-color:rgba(255,214,0,.4)}
+.goal-add-input::placeholder{color:rgba(255,255,255,.2)}
+.goal-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,230,118,.15);border:1px solid rgba(0,230,118,.35);border-radius:12px;padding:12px 24px;font-size:13px;font-weight:700;color:#00e676;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:1500;white-space:nowrap}
+.goal-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.cmd-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.cmd-row:last-child{border-bottom:none}
+.cmd-tags{display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0;min-width:160px}
+.cmd-tag{background:rgba(100,180,255,.1);border:1px solid rgba(100,180,255,.2);border-radius:6px;padding:2px 8px;font-size:10px;font-family:monospace;color:#64b4ff;white-space:nowrap}
+.cmd-desc{font-size:11px;color:rgba(255,255,255,.5);line-height:1.5;padding-top:2px}
+.card-toggle{cursor:pointer;user-select:none}
+.card-toggle-icon{font-size:10px;color:var(--sub);margin-left:6px;transition:transform .2s;display:inline-block}
+.card-toggle-icon.open{transform:rotate(180deg)}
+#cmd-body{overflow:hidden;transition:max-height .3s ease;max-height:0}
+#cmd-body.open{max-height:600px}
+</style>
+</head>
+<body>
+<div id="titlebar">
+  <span style="font-size:14px;-webkit-app-region:no-drag">🎬</span>
+  <span class="app-title">REACTION MILESTONE</span>
+  <span id="version-badge" style="-webkit-app-region:no-drag;font-size:10px;color:rgba(255,255,255,.2);letter-spacing:1px;margin-right:4px"></span>
+  <button class="win-btn" onclick="window.electronAPI?.minimize()">─</button>
+  <button class="win-btn" onclick="window.electronAPI?.hide()">⊡</button>
+  <button class="win-btn close" onclick="window.electronAPI?.quit()">✕</button>
+</div>
+<!-- アップデート後チェンジログポップアップ -->
+<div id="update-popup">
+  <div class="up-header">
+    <span class="up-badge">🎉 UPDATE</span>
+    <span class="up-title" id="up-version-title">アップデート完了</span>
+  </div>
+  <div class="up-notes" id="up-notes-text">更新内容を読み込み中...</div>
+  <button class="up-close" onclick="closeUpdatePopup()">閉じる</button>
+</div>
+
+<!-- 上部固定バナー（2回目以降） -->
+<div id="stream-banner">
+  <img id="sb-thumb" src="" alt="" onerror="this.style.display='none'" style="display:none">
+  <div style="min-width:0;flex:1">
+    <div id="sb-title">──</div>
+    <div id="sb-channel">──</div>
+  </div>
+  <div id="sb-viewers" onclick="toggleViewersGraph()" title="クリックしてグラフを表示"><div class="live-dot"></div><span id="sb-viewers-num">──</span></div>
+</div>
+
+<!-- 視聴者数グラフパネル（バナー直下） -->
+<div id="viewers-graph-panel">
+  <div id="viewers-graph-wrap">
+    <span class="graph-label" id="graph-title">👥 同時接続数</span>
+    <span class="graph-label" id="graph-close" onclick="toggleViewersGraph()">✕ 閉じる</span>
+    <canvas id="viewers-canvas"></canvas>
+  </div>
+</div>
+
+<!-- 接続成功ポップアップ（初回のみ） -->
+<div id="connect-popup">
+  <div class="cp-inner">
+    <img id="cp-thumb" src="" alt="" onerror="this.style.display='none'" style="display:none">
+    <div style="min-width:0;flex:1">
+      <div id="cp-title">──</div>
+      <div id="cp-channel">──</div>
+      <div class="cp-badge"><div class="live-dot"></div>&nbsp;LIVE</div>
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,.35);flex-shrink:0" id="cp-viewers"></div>
+  </div>
+</div>
+<div id="content">
+  <div class="card" id="card-connect">    <div class="card-title">📡 YouTube Live 接続</div>
+    <div class="url-wrap">
+      <input type="text" id="live-url" placeholder="https://www.youtube.com/watch?v=..."
+        onfocus="showHistory()" onblur="hideHistory()" onkeydown="onUrlKey(event)" oninput="onUrlInput()"/>
+      <button class="btn btn-primary" id="connect-btn" onclick="connect()">接続</button>
+      <div id="url-history"></div>
+    </div>
+    <div id="status-badge"><div class="dot"></div><span id="status-text">未接続</span></div>
+    <div class="btn-row">
+      <button class="btn btn-danger"  onclick="disconnect()"      style="font-size:11px;padding:6px 12px;">切断</button>
+      <button class="btn btn-ghost"   onclick="refreshViewers()"  style="font-size:11px;padding:6px 12px;" id="refresh-viewers-btn" title="視聴者数を手動更新">👥 更新</button>
+      <button class="btn btn-danger"  onclick="endStream()"       style="font-size:11px;padding:6px 12px;background:rgba(255,100,0,.15);border-color:rgba(255,100,0,.3);color:#ff6400;" title="配信を終了してサマリーを表示">🎬 配信終了</button>
+    </div>
+  </div>
+
+  <div class="card" id="card-count">    <div class="card-title">📊 リアクション数</div>
+    <div class="big-count" id="count-display">0</div>
+    <div class="count-sub" id="count-sub">──</div>
+    <div class="btn-row">
+      <button class="btn btn-danger" onclick="doReset()" style="font-size:11px;padding:6px 12px;">リセット</button>
+    </div>
+  </div>
+
+  <div class="card" id="card-syslog">    <div class="log-box-title">
+      <span class="card-title" style="margin-bottom:0">📝 システムログ</span>
+      <button class="btn btn-ghost" style="font-size:10px;padding:2px 8px" onclick="clearLog('sys-log')">クリア</button>
+    </div>
+    <div class="log-scroll" id="sys-log"></div>
+    <div class="log-resize-hint">↕ 右下角でサイズ変更</div>
+  </div>
+
+  <!-- リアクションログカード -->
+
+  <div class="card" id="card-rxlog">    <div class="log-box-title">
+      <span class="card-title" style="margin-bottom:0">✨ リアクションログ</span>
+      <button class="btn btn-ghost" style="font-size:10px;padding:2px 8px" onclick="clearLog('rx-log')">クリア</button>
+    </div>
+    <div class="log-scroll" id="rx-log"></div>
+    <div class="log-resize-hint">↕ 右下角でサイズ変更</div>
+  </div>
+
+  <div class="card" id="card-goals">    <div class="card-title" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="openGoalModal()">
+      🎯 目標リスト
+      <span style="font-size:10px;color:var(--sub);font-weight:400">⚙ 編集</span>
+    </div>
+    <div id="goal-list"></div>
+  </div>
+
+  <!-- サウンドカード -->
+
+  <div class="card" id="card-goals-r">    <div class="card-title" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="openGoalModal()">
+      🎯 目標リスト
+      <span style="font-size:10px;color:var(--sub);font-weight:400">⚙ 編集</span>
+    </div>
+    <div id="goal-list-r"></div>
+  </div>
+
+  <!-- サウンドカード -->
+
+  <div class="card" id="card-commands">    <div class="card-title card-toggle" onclick="toggleCmdList()" style="cursor:pointer;display:flex;align-items:center">
+      💬 配信コマンド一覧
+      <span class="card-toggle-icon" id="cmd-toggle-icon">▼</span>
+    </div>
+    <div id="cmd-body">
+      <div class="cmd-row">
+        <div class="cmd-tags">
+          <span class="cmd-tag">!progress</span>
+          <span class="cmd-tag">!prog</span>
+          <span class="cmd-tag">!p</span>
+        </div>
+        <div class="cmd-desc">現在のリアクション数・進捗バー・次のマイルストーンまでの残り数・時速を表示します。</div>
+      </div>
+      <div class="cmd-row">
+        <div class="cmd-tags">
+          <span class="cmd-tag">進捗</span>
+          <span class="cmd-tag">どのくらい</span>
+          <span class="cmd-tag">どこまで</span>
+          <span class="cmd-tag">!進捗</span>
+          <span class="cmd-tag">!どのくらい</span>
+        </div>
+        <div class="cmd-desc">日本語コマンド。!progress と同じ動作をします。</div>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.04);font-size:10px;color:rgba(255,255,255,.2)">
+        ※ コマンドはクールダウン10秒。全角・半角・大文字小文字は自動で統一されます。
+      </div>
+    </div>
+  </div>
+
+  <!-- 空スロット（自由配置用） -->
+  
+  
+
+  <!-- システムログカード -->
+
+  <div class="card" id="card-sound">    <div class="card-title">🔔 サウンド</div>
+    <div class="volume-row" style="margin-bottom:10px">
+      <button class="btn btn-ghost" id="mute-btn" onclick="toggleMute()" style="font-size:11px;padding:5px 12px;flex-shrink:0;min-width:72px">🔔 ON</button>
+      <input type="range" class="volume-slider" id="volume-slider" min="0" max="100" value="80" oninput="onVolumeChange(this.value)">
+      <span class="volume-val" id="volume-val">80%</span>
+    </div>
+    <select id="sound-select" onchange="onSoundChange(this.value)" style="width:100%;background:#1e1e2e;border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;outline:none;margin-bottom:8px;cursor:pointer">
+      <option value="chime">🔔 チャイム（デフォルト）</option>
+      <option value="fanfare">🎺 ファンファーレ</option>
+      <option value="drumroll">🥁 ドラムロール</option>
+      <option value="magical">✨ マジカル</option>
+      <option value="pinpon">🎵 ピンポン</option>
+      <option value="custom">📁 カスタム...</option>
+    </select>
+    <div id="custom-sound-row" style="display:none;margin-bottom:8px">
+      <input type="file" id="custom-sound-file" accept=".mp3,.wav,.ogg,.m4a" onchange="onCustomSoundSelected(this)" style="display:none">
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-ghost" onclick="document.getElementById('custom-sound-file').click()" style="font-size:10px;padding:5px 10px;flex-shrink:0">📂 選択</button>
+        <span id="custom-sound-name" style="font-size:10px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">未選択</span>
+      </div>
+    </div>
+    <button class="btn btn-ghost" onclick="testSound()" style="font-size:11px;padding:6px 0;width:100%">▶ テスト再生</button>
+  </div>
+
+  <!-- コマンドリスト -->
+
+  <div class="card" id="card-test">    <div class="card-title">🧪 テスト</div>
+    <div class="test-grid">
+      <button class="btn btn-ghost" onclick="addTest(1)">+1</button>
+      <button class="btn btn-ghost" onclick="addTest(10)">+10</button>
+      <button class="btn btn-ghost" onclick="addTest(50)">+50</button>
+      <button class="btn btn-ghost" onclick="addTest(100)">+100</button>
+      <button class="btn btn-ghost" onclick="jumpTo(100)">→100</button>
+      <button class="btn btn-ghost" onclick="jumpTo(500)">→500</button>
+      <button class="btn btn-ghost" onclick="jumpTo(1000)">→1k</button>
+      <button class="btn btn-ghost" onclick="jumpTo(5000)">→5k</button>
+    </div>
+  </div>
+  <!-- 目標カード -->
+
+  <div class="card" id="update-card">    <div class="card-title">🔄 アップデート</div>
+    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
+      <div id="update-status" style="font-size:12px;color:var(--sub)">最新版を確認中...</div>
+      <div id="update-date" style="font-size:10px;color:rgba(255,255,255,.2)"></div>
+    </div>
+    <button class="btn btn-ghost" id="check-update-btn" onclick="checkUpdate()" style="font-size:11px;padding:6px 14px;">今すぐ確認</button>
+    <div id="changelog-area" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="font-size:10px;letter-spacing:1px;color:var(--sub);margin-bottom:6px">📋 更新内容</div>
+      <div id="changelog-text" style="font-size:11px;color:rgba(255,255,255,.6);line-height:1.7;max-height:120px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;white-space:pre-wrap"></div>
+    </div>
+  </div>
+
+  <div class="card" id="card-obs">    <div class="card-title">🖥 OBS ブラウザソース</div>
+    <div class="obs-url-box" onclick="copyOverlay(this)">
+      <span class="obs-url-text" id="overlay-url">http://localhost:3000/overlay.html</span>
+      <span style="font-size:11px;color:var(--sub)">📋</span>
+    </div>
+    <div class="obs-hint">クリックでコピー｜推奨: 1920×1080 / 背景透過 ✓</div>
+  </div>
+  <!-- アップデートカード -->
+
+  <!-- 設定カード -->
+  <div class="card" id="card-settings">
+    <div class="card-title">⚙ 設定</div>
+    <div style="font-size:10px;color:var(--sub);margin-bottom:4px;margin-top:4px">Discord WebHook URL</div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <input type="text" id="webhook-url-input" placeholder="https://discord.com/api/webhooks/..."
+        style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;outline:none;font-family:monospace"
+        oninput="onWebhookInput(this.value)">
+      <button class="btn btn-ghost" onclick="clearWebhook()" style="font-size:10px;padding:5px 10px;flex-shrink:0" title="クリア">✕</button>
+    </div>
+    <div id="webhook-status" style="font-size:10px;color:rgba(255,255,255,.2);margin-top:4px;height:14px"></div>
+  </div>
+
+  <div class="card" id="card-test-r">    <div class="card-title">🧪 テスト</div>
+    <div class="test-grid">
+      <button class="btn btn-ghost" onclick="addTest(1)">+1</button>
+      <button class="btn btn-ghost" onclick="addTest(10)">+10</button>
+      <button class="btn btn-ghost" onclick="addTest(50)">+50</button>
+      <button class="btn btn-ghost" onclick="addTest(100)">+100</button>
+      <button class="btn btn-ghost" onclick="jumpTo(100)">→100</button>
+      <button class="btn btn-ghost" onclick="jumpTo(500)">→500</button>
+      <button class="btn btn-ghost" onclick="jumpTo(1000)">→1k</button>
+      <button class="btn btn-ghost" onclick="jumpTo(5000)">→5k</button>
+    </div>
+  </div>
+  <!-- 目標カード -->
+
+</div>
+<script>
+const isElectron=!!window.electronAPI,WS_URL=`ws://${location.hostname}:3001`;
+let ws=null,totalCount=0,sessionStart=Date.now(),urlHistory=[],historyVisible=false,ytConnected=false;
+const MILESTONES=[100,500,1000,2000,3000,5000,7500,10000,15000,20000,30000,50000];
+
+async function init(){
+  if(isElectron){
+    const cfg=await electronAPI.getConfig();
+    urlHistory=cfg.urlHistory??[];
+    // バージョン表示
+    const ver=await electronAPI.getVersion();
+    document.getElementById('version-badge').textContent='v'+ver;
+    // アップデート状態の受信
+    electronAPI.onUpdateStatus(handleUpdateStatus);
+  }
+  document.getElementById('overlay-url').textContent=`http://${location.hostname}:3000/overlay.html`;
+  connectWs();sysLog('info','サーバー起動中...');
+  restoreCardOrder();
+  checkPendingChangelog();
+  restoreCmdListState();
+  loadGoals();
+  loadVolume();
+  loadWebhook();
+  setTimeout(initFooter, 800);
+}
+
+async function handleUpdateStatus(data){
+  const el=document.getElementById('update-status');
+  const btn=document.getElementById('check-update-btn');
+  if(data.status==='checking'){
+    el.textContent='確認中...';el.style.color='var(--sub)';
+  } else if(data.status==='available'){
+    el.innerHTML=`🆕 <strong style="color:var(--gold)">v${data.version} が利用可能</strong>`;
+    el.style.color='';
+    btn.textContent='ダウンロード中...';btn.disabled=true;
+    showChangelog(data.notes);
+    showUpdateDate(data.releaseDate);
+    checkingUpdate=false;
+    clearTimeout(checkUpdateTimer);
+  } else if(data.status==='downloaded'){
+    el.innerHTML=`✅ <strong style="color:var(--green)">v${data.version} の準備完了</strong>`;
+    btn.textContent='今すぐ再起動して更新';
+    btn.className='btn btn-primary';btn.disabled=false;
+    btn.onclick=()=>{
+      try{localStorage.setItem('pendingChangelog',JSON.stringify({version:data.version,notes:data.notes,releaseDate:data.releaseDate}));}catch(e){}
+      electronAPI.installUpdate();
+    };
+    showChangelog(data.notes);
+    showUpdateDate(data.releaseDate);
+  } else if(data.status==='not-available'){
+    const ver = isElectron ? (await electronAPI.getVersion().catch(()=>'')) : '';
+    el.innerHTML=`✅ 最新版です${ver?' <span style="color:rgba(255,255,255,.3);font-size:10px">v'+ver+'</span>':''}`;
+    el.style.color='var(--green)';
+    btn.textContent='今すぐ確認';btn.disabled=false;
+    checkingUpdate=false;
+    clearTimeout(checkUpdateTimer);
+  } else if(data.status==='error'){
+    el.textContent='⚠️ 確認できませんでした';el.style.color='var(--sub)';
+    btn.textContent='再試行';btn.disabled=false;
+    checkingUpdate=false;
+    clearTimeout(checkUpdateTimer);
+  }
+}
+
+let checkingUpdate = false;
+let checkUpdateTimer = null;
+
+function checkUpdate(){
+  if(!isElectron||checkingUpdate)return;
+  checkingUpdate=true;
+  const btn=document.getElementById('check-update-btn');
+  const el=document.getElementById('update-status');
+  btn.disabled=true;
+  el.textContent='確認中...';
+
+  // fire-and-forget（awaitしない）
+  // 結果は onUpdateStatus イベントで受け取る
+  electronAPI.checkUpdate().catch(e=>{
+    console.error('checkUpdate error:', e);
+    checkingUpdate=false;
+    btn.disabled=false;
+    el.textContent='⚠️ 確認できませんでした';
+  });
+
+  // 20秒以内にステータスが来なければ強制解除
+  clearTimeout(checkUpdateTimer);
+  checkUpdateTimer=setTimeout(()=>{
+    if(checkingUpdate){
+      checkingUpdate=false;
+      btn.disabled=false;
+      if(el.textContent==='確認中...') el.textContent='⚠️ タイムアウト';
+    }
+  }, 20000);
+}
+
+let wsReconnectTimer=null;
+function connectWs(){
+  ws=new WebSocket(WS_URL);
+  ws.onopen=()=>sysLog('info','WebSocket接続済み');
+  ws.onmessage=(e)=>{
+    let msg;try{msg=JSON.parse(e.data);}catch(_){return;}
+    if(msg.type==='init'){
+      if(msg.sessionStart)sessionStart=msg.sessionStart;
+      // 画面を開き直した・つなぎ直したときは、過去の目標達成をまとめて通知しない
+      setCount(msg.count,{silent:true});
+      // 開き直す前から YouTube に接続中なら、状態表示もそれに合わせる
+      if(msg.connected)updateStatus('connected',msg.videoId,{quiet:true});
+      updateStreamInfo(msg);
+      // サーバーが再起動していてもサウンド設定（音源含む）が残るよう送り直す
+      _sentCustomSoundB64=null;_broadcastVolume();
+    }
+    if(msg.type==='update'){setCount(msg.count);if(msg.sessionStart)sessionStart=msg.sessionStart;}
+    if(msg.type==='yt_status'){updateStatus(msg.status,msg.videoId);if(msg.count!==undefined)setCount(msg.count);updateStreamInfo(msg);}
+    if(msg.type==='milestone')sysLog('milestone',`🏆 ${msg.milestone.toLocaleString()} 突破！ 時速 ${msg.speed.toLocaleString()}`);
+    if(msg.type==='reaction_log')rxLog(msg.amount,msg.total,msg.emojiMap||{});
+    if(msg.type==='progress_cmd')progressCmdLog(msg.author,msg.command);
+    if(msg.type==='viewers_update')updateViewers(msg.viewers, msg.history);
+    if(msg.type==='session_summary')showSessionSummary(msg);
+    if(msg.type==='sys_log')sysLog(msg.level||'info', msg.text);
+    if(msg.type==='reset'){setCount(0);sysLog('info','🔄 リセット');}
+  };
+  // error のあとに close も必ず来るので、再接続は close でだけ行う（両方だと接続が倍々に増える）
+  ws.onerror=()=>{};
+  ws.onclose=()=>{clearTimeout(wsReconnectTimer);wsReconnectTimer=setTimeout(connectWs,3000);};
+}
+
+let popupTimer = null;
+let streamInfoShown = false;  // 接続ごとの初回フラグ
+let connectCount = 0;         // 累計接続回数（セッション内）
+let lastVideoId = null;       // バナー用データ保持
+
+function updateStreamInfo(msg){
+  if(!msg.title&&!msg.channel)return;
+
+  // ── ポップアップ用データ更新 ──
+  if(msg.title){const t=document.getElementById('cp-title');t.textContent=msg.title;t.title=msg.title;}
+  if(msg.channel)document.getElementById('cp-channel').textContent=msg.channel;
+  if(msg.viewers)document.getElementById('cp-viewers').textContent=msg.viewers+' 人';
+  if(msg.videoId){const th=document.getElementById('cp-thumb');th.src=`https://i.ytimg.com/vi/${msg.videoId}/default.jpg`;th.style.display='';}
+
+  // ── バナー用データ更新 ──
+  if(msg.title)  document.getElementById('sb-title').textContent=msg.title;
+  if(msg.channel)document.getElementById('sb-channel').textContent=msg.channel;
+  if(msg.viewers)document.getElementById('sb-viewers-num').textContent=msg.viewers+' 人';
+  if(msg.videoId){
+    lastVideoId=msg.videoId;
+    const sbth=document.getElementById('sb-thumb');
+    sbth.src=`https://i.ytimg.com/vi/${msg.videoId}/default.jpg`;
+    sbth.style.display='';
+  }
+
+  // 同じ接続で既に処理済みならスキップ
+  if(streamInfoShown)return;
+  streamInfoShown=true;
+  connectCount++;
+
+  // 初回・2回目以降ともに: ポップアップ4秒表示→バナーに固定
+  const popup=document.getElementById('connect-popup');
+  popup.classList.add('show');
+  clearTimeout(popupTimer);
+  popupTimer=setTimeout(()=>{
+    popup.classList.remove('show');
+    // ポップアップが消えたらバナーを固定表示
+    document.getElementById('stream-banner').classList.add('visible');
+  }, 4000);
+}
+
+function setCount(n,{silent=false}={}){
+  const prev = silent ? n : lastCount;
+  lastCount = n;
+  totalCount=n;
+  const el=document.getElementById('count-display');
+  el.textContent=n.toLocaleString();el.classList.add('bump');setTimeout(()=>el.classList.remove('bump'),200);
+  const elapsed=Date.now()-sessionStart,h=Math.floor(elapsed/3600000),m=Math.floor((elapsed%3600000)/60000);
+  document.getElementById('count-sub').textContent=`経過: ${h>0?h+'h':''}${m}m`;
+  window.electronAPI?.updateTray({status:ytConnected?'接続中':'未接続',count:n});
+  // 目標チェック・再描画
+  if(n !== prev) checkGoals(n, prev);
+  renderGoals(n);
+}
+
+function updateStatus(status,videoId,{quiet=false}={}){
+  const badge=document.getElementById('status-badge'),dot=badge.querySelector('.dot'),text=document.getElementById('status-text');
+  const map={connected:{cls:'connected',dot:'',label:`接続中${videoId?' · '+videoId:''}`},connecting:{cls:'connecting',dot:'blink',label:'接続中...'},disconnected:{cls:'',dot:'',label:'未接続'},error:{cls:'error',dot:'blink',label:'エラー'},invalid_url:{cls:'error',dot:'',label:'無効なURL'}};
+  const s=map[status]??map.disconnected;
+  badge.className=s.cls;dot.className='dot '+s.dot;text.textContent=s.label;
+  ytConnected=status==='connected';
+  window.electronAPI?.updateTray({status:ytConnected?'接続中':'未接続',count:totalCount});
+  if(quiet)return;
+  if(status==='connected')sysLog('connected',`✅ 接続成功: ${videoId}`);
+  if(status==='error')sysLog('error','❌ 接続エラー');
+  if(status==='disconnected'){
+    sysLog('info','🔌 切断');
+    streamInfoShown=false;
+    document.getElementById('stream-banner').classList.remove('visible');
+  }
+}
+
+async function connect(){
+  const liveUrl=document.getElementById('live-url').value.trim();if(!liveUrl)return;
+  if(isElectron)urlHistory=await electronAPI.addUrlHistory(liveUrl);
+  else urlHistory=[liveUrl,...urlHistory.filter(u=>u!==liveUrl)].slice(0,10);
+  sysLog('info',`🔗 接続: ${liveUrl}`);
+  const btn=document.getElementById('connect-btn');btn.disabled=true;btn.textContent='接続中...';
+  try{
+    const res=await fetch('/api/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({liveUrl})});
+    const data=await res.json();if(!data.ok)sysLog('error',`❌ ${data.error}`);
+  }catch(e){sysLog('error',`❌ ${e.message}`);}
+  finally{btn.disabled=false;btn.textContent='接続';}
+}
+async function disconnect(){
+  // サマリーなしで切断
+  await fetch('/api/disconnect-silent',{method:'POST'}).catch(()=>{});
+}
+
+async function refreshViewers(){
+  const btn=document.getElementById('refresh-viewers-btn');
+  btn.textContent='更新中...';btn.disabled=true;
+  try{
+    const res=await fetch('/api/viewers',{method:'GET'}).catch(()=>null);
+    if(res&&res.ok){
+      const d=await res.json();
+      if(d.viewers)updateViewers(d.viewers);
+      sysLog('info',`👥 視聴者数手動更新: ${d.viewers||'取得失敗'}`);
+    }
+  }finally{
+    setTimeout(()=>{btn.textContent='👥 更新';btn.disabled=false;},1000);
+  }
+}
+
+async function endStream(){
+  // 切断してサマリーを表示（サマリーはdisconnect時にWSで自動送信される）
+  await fetch('/api/disconnect',{method:'POST'}).catch(()=>{});
+  sysLog('info','🎬 配信終了');
+}
+async function doReset(){await fetch('/api/reset',{method:'POST'}).catch(()=>{});}
+async function addTest(n){await fetch('/api/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:n})}).catch(()=>{});sysLog('reaction',`🧪 +${n} テスト加算`);}
+async function jumpTo(t){const d=t-totalCount;if(d<=0)return;await fetch('/api/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:d})}).catch(()=>{});sysLog('reaction',`🧪 →${t.toLocaleString()} ジャンプ`);}
+
+function showHistory(){historyVisible=true;renderHistory();}
+function hideHistory(){setTimeout(()=>{historyVisible=false;document.getElementById('url-history').classList.remove('show');},150);}
+function renderHistory(){
+  const el=document.getElementById('url-history');
+  // URLに " や < が入っていても壊れないよう、文字列はHTMLに埋め込まずDOMで組み立てる
+  el.innerHTML=urlHistory.length===0?'<div class="history-empty">履歴なし</div>':'';
+  urlHistory.forEach((u,i)=>{
+    const div=document.createElement('div');
+    div.className='history-item';
+    div.textContent=u.length>60?u.slice(0,60)+'...':u;
+    div.onmousedown=()=>selectHistory(i);
+    el.appendChild(div);
+  });
+  if(historyVisible)el.classList.add('show');
+}
+function selectHistory(i){document.getElementById('live-url').value=urlHistory[i]??'';document.getElementById('url-history').classList.remove('show');}
+function onUrlKey(e){if(e.key==='Enter')connect();if(e.key==='Escape')document.getElementById('url-history').classList.remove('show');}
+function onUrlInput(){if(historyVisible)renderHistory();}
+
+function copyOverlay(box){
+  const u=`http://${location.hostname}:3000/overlay.html`;
+  if(isElectron)electronAPI.copyOverlayUrl();else navigator.clipboard.writeText(u).catch(()=>{});
+  const hint=box.querySelector('.obs-url-text'),orig=hint.textContent;
+  hint.textContent='✓ コピーしました！';hint.style.color='var(--green)';
+  setTimeout(()=>{hint.textContent=orig;hint.style.color='';},1500);
+}
+
+function sysLog(type,text){addLogEntry('sys-log','e-'+type,text);}
+
+function rxLog(amount, total, emojiMap) {
+  const nextM = MILESTONES.find(m => m > total) ?? null;
+  const remaining = nextM ? nextM - total : 0;
+  const isMilestone = MILESTONES.includes(total);
+  const cls = isMilestone ? 'rxlog-milestone' : 'rxlog-entry';
+
+  // 絵文字サマリー（多い順に最大3種）
+  const emojiSummary = Object.entries(emojiMap)
+    .sort((a,b) => b[1]-a[1])
+    .slice(0,3)
+    .map(([emoji, cnt]) => cnt > 1 ? `${emoji}×${cnt}` : emoji)
+    .join(' ');
+
+  const text = isMilestone
+    ? `🏆 ${total.toLocaleString()} 達成！${emojiSummary ? '  '+emojiSummary : ''}`
+    : `+${amount}${emojiSummary ? '  '+emojiSummary : ''}  合計 ${total.toLocaleString()}${nextM ? `  次→${nextM.toLocaleString()}(あと${remaining.toLocaleString()})` : '  MAX!'}`;
+
+  addLogEntry('rx-log', cls, text);
+}
+
+function progressCmdLog(author, command) {
+  addLogEntry('sys-log', 'e-info', `💬 ${author} が ${command} を実行`);
+}
+
+function addLogEntry(logId,cls,text){
+  const el=document.getElementById(logId),div=document.createElement('div');
+  div.className=cls;
+  const t=new Date().toLocaleTimeString('ja-JP',{hour12:false});
+  div.textContent=`[${t}] ${text}`;
+  el.appendChild(div);el.scrollTop=el.scrollHeight;
+  while(el.children.length>300)el.removeChild(el.firstChild);
+}
+function clearLog(id){document.getElementById(id).innerHTML='';}
+
+// コマンドリストの開閉
+function toggleCmdList(){
+  const body = document.getElementById('cmd-body');
+  const icon = document.getElementById('cmd-toggle-icon');
+  if(!body) return;
+  const isOpen = body.classList.toggle('open');
+  if(icon) icon.classList.toggle('open', isOpen);
+  try{ localStorage.setItem('cmdListOpen', isOpen ? '1' : '0'); }catch(e){}
+}
+
+function restoreCmdListState(){
+  try{
+    if(localStorage.getItem('cmdListOpen') === '1'){
+      const body = document.getElementById('cmd-body');
+      const icon = document.getElementById('cmd-toggle-icon');
+      if(body) body.classList.add('open');
+      if(icon) icon.classList.add('open');
+    }
+  }catch(e){}
+}
+
+// ══════════════════════════════════
+// 目標リスト
+// ══════════════════════════════════
+let goals = [];       // 昇順ソートで保持
+let lastCount = 0;    // setCount と連動
+let goalToastTimer = null;
+
+const DEFAULT_GOALS = [100,250,500,1000,1500,2000,2500,3000,4000,5000,7000,10000];
+
+function loadGoals(){
+  try{
+    const saved = localStorage.getItem('goals');
+    if(saved !== null){
+      goals = JSON.parse(saved);
+    } else {
+      // 初回起動時はデフォルト目標を設定
+      goals = DEFAULT_GOALS.map(v => ({value: v}));
+      saveGoals();
+    }
+  }catch(e){ goals=[]; }
+  renderGoals();
+}
+function saveGoals(){
+  try{ localStorage.setItem('goals', JSON.stringify(goals)); }catch(e){}
+}
+
+// モーダル開閉
+function openGoalModal(){
+  renderGoalModal();
+  document.getElementById('goal-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('goal-input')?.focus(), 100);
+}
+function closeGoalModal(){
+  document.getElementById('goal-modal').classList.remove('show');
+}
+// モーダル外クリックで閉じる
+// （#goal-modal はこの script より後ろにあるので、要素を直接取らず document で受ける）
+document.addEventListener('click', e=>{
+  if(e.target.id==='goal-modal') closeGoalModal();
+});
+
+function addGoal(){
+  const inp = document.getElementById('goal-input');
+  const v = parseInt(inp.value);
+  if(!v || v <= 0){ inp.focus(); return; }
+  if(goals.some(g => g.value === v)){ inp.value=''; inp.focus(); return; }
+  goals.push({ value: v });
+  goals.sort((a,b) => a.value - b.value);
+  saveGoals();
+  renderGoalModal();
+  renderGoals(lastCount);
+  inp.value = '';
+  inp.focus();
+}
+function removeGoal(value){
+  goals = goals.filter(g => g.value !== value);
+  saveGoals();
+  renderGoalModal();
+  renderGoals(lastCount);
+}
+
+// モーダル内一覧（全件）
+function renderGoalModal(){
+  const list = document.getElementById('goal-modal-list');
+  if(!list) return;
+  if(goals.length === 0){
+    list.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,.25);padding:8px 0">目標がありません。</div>';
+    return;
+  }
+  const count = lastCount;
+  list.innerHTML = [...goals].sort((a,b)=>b.value-a.value).map(g=>{
+    const cleared = count >= g.value;
+    const color = cleared ? 'rgba(0,230,118,.7)' : 'rgba(255,255,255,.8)';
+    const strike = cleared ? 'text-decoration:line-through;color:rgba(255,255,255,.3)' : '';
+    return `<div class="goal-modal-item">
+      <span class="goal-modal-val" style="${strike}">${g.value.toLocaleString()}</span>
+      ${cleared ? '<span style="font-size:10px;color:#00e676">✓ クリア</span>' : ''}
+      <button class="goal-del-btn" onclick="removeGoal(${g.value})" title="削除">×</button>
+    </div>`;
+  }).join('');
+}
+
+// カード表示: クリア2・挑戦中1・未来2 = 最大5件
+function renderGoals(count){
+  if(count === undefined) count = lastCount;
+  // 左右両列を更新
+  for(const lid of ['goal-list','goal-list-r']){
+  const list = document.getElementById(lid);
+  if(!list) continue;
+  if(goals.length === 0){
+    list.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,.2);padding:6px 0">目標未設定（タイトルをクリックして追加）</div>';
+    continue; // return だと右列のカードが更新されず古い表示が残る
+  }
+  const sorted = [...goals].sort((a,b) => a.value - b.value); // 昇順
+  const cleared  = sorted.filter(g => count >= g.value);
+  const upcoming = sorted.filter(g => count < g.value);
+  // 表示対象を選ぶ: クリア直近2件 + 挑戦中1件 + 未来2件
+  const showCleared  = cleared.slice(-2);           // 最新クリア2件
+  const active       = upcoming[0] || null;          // 挑戦中
+  const showUpcoming = upcoming.slice(1, 3);         // 未来2件
+
+  const items = [
+    ...showUpcoming.reverse().map(g=>({g, type:'upcoming'})),
+    ...(active ? [{g: active, type:'active'}] : []),
+    ...showCleared.reverse().map(g=>({g, type:'cleared'})),
+  ];
+
+  list.innerHTML = items.map(({g, type}) => {
+    if(type === 'cleared'){
+      return `<div class="goal-item">
+        <span class="goal-status-badge cleared">✓ クリア</span>
+        <span class="goal-value cleared">${g.value.toLocaleString()}</span>
+      </div>`;
+    }
+    if(type === 'active'){
+      const pct = Math.min(100, Math.round(count / g.value * 100));
+      return `<div class="goal-item">
+        <span class="goal-status-badge active">🔥 挑戦中</span>
+        <span class="goal-value">${g.value.toLocaleString()}</span>
+        <div class="goal-progress-wrap">
+          <div class="goal-progress-text">${count.toLocaleString()} / ${g.value.toLocaleString()} <span style="color:rgba(255,255,255,.2);font-size:9px">(${pct}%)</span></div>
+          <div class="goal-progress-bar"><div class="goal-progress-fill" style="width:${pct}%"></div></div>
+        </div>
+      </div>`;
+    }
+    // upcoming: 1件目は「次の目標」、それ以降は「目標」
+    const isNext = showUpcoming.length > 0 && g.value === showUpcoming[showUpcoming.length-1].value;
+    const badge = isNext
+      ? '<span class="goal-status-badge next">⏭ 次</span>'
+      : '<span class="goal-status-badge upcoming">目標</span>';
+    return `<div class="goal-item">
+      ${badge}
+      <span class="goal-value">${g.value.toLocaleString()}</span>
+    </div>`;
+  }).join('');
+  }
+}
+
+// カウント更新時に目標チェック
+function checkGoals(newCount, oldCount){
+  goals.forEach(g => {
+    if(g.value > oldCount && g.value <= newCount){
+      showGoalToast('🎯 目標達成！ ' + g.value.toLocaleString() + ' クリア！');
+      sysLog('milestone', '🎯 目標 ' + g.value.toLocaleString() + ' クリア！');
+    }
+  });
+}
+function showGoalToast(msg){
+  const el = document.getElementById('goal-toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(goalToastTimer);
+  goalToastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ══════════════════════════════════
+// サウンド設定
+// ══════════════════════════════════
+let soundVolume   = 0.8;
+let soundMuted    = false;
+
+function loadVolume(){
+  try{
+    const v=localStorage.getItem('soundVolume');
+    const m=localStorage.getItem('soundMuted');
+    const t=localStorage.getItem('soundType');
+    const b=localStorage.getItem('customSoundB64');
+    const bm=localStorage.getItem('customSoundMime');
+    const bn=localStorage.getItem('customSoundName');
+    if(v!==null) soundVolume=parseFloat(v);
+    if(m!==null) soundMuted=m==='true';
+    if(t!==null){ soundType=t; const sel=document.getElementById('sound-select'); if(sel) sel.value=t; if(t==='custom') document.getElementById('custom-sound-row').style.display='block'; }
+    if(b!==null){
+      customSoundB64=b;
+      // 起動時にBase64→ArrayBuffer→デコードしてdecodedBufferを復元
+      try{
+        const bin=atob(b);
+        const bytes=new Uint8Array(bin.length);
+        for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+        const AudioCtx=window.AudioContext||window.webkitAudioContext;
+        const ctx=new AudioCtx();
+        ctx.decodeAudioData(bytes.buffer.slice(0), decoded=>{
+          customDecodedBuffer=decoded; ctx.close();
+        }, ()=>ctx.close());
+      }catch(e){}
+    }
+    if(bm!==null) customSoundMime=bm;
+    if(bn!==null){ const el=document.getElementById('custom-sound-name'); if(el) el.textContent=bn; }
+  }catch(e){}
+  _applyVolumeUI();
+}
+
+function _applyVolumeUI(){
+  const slider  = document.getElementById('volume-slider');
+  const valEl   = document.getElementById('volume-val');
+  const muteBtn = document.getElementById('mute-btn');
+  if(slider)  slider.value = Math.round(soundVolume * 100);
+  if(valEl)   valEl.textContent = Math.round(soundVolume * 100) + '%';
+  if(muteBtn){
+    muteBtn.textContent = soundMuted ? '🔇 OFF' : '🔔 ON';
+    muteBtn.style.color = soundMuted ? 'var(--sub)' : '';
+    muteBtn.style.borderColor = soundMuted ? 'rgba(255,255,255,.1)' : '';
+  }
+  _broadcastVolume();
+}
+
+function onVolumeChange(val){
+  soundVolume = parseInt(val) / 100;
+  document.getElementById('volume-val').textContent = val + '%';
+  try{ localStorage.setItem('soundVolume', soundVolume); }catch(e){}
+  _broadcastVolume();
+}
+
+function toggleMute(){
+  soundMuted = !soundMuted;
+  try{ localStorage.setItem('soundMuted', soundMuted); }catch(e){}
+  _applyVolumeUI();
+}
+
+// サーバーに最後に送った音源（同じものを何度も送らない。スライダーを動かすたびに数MB送っていた）
+let _sentCustomSoundB64 = null;
+function _broadcastVolume(){
+  const effectiveVol = soundMuted ? 0 : soundVolume;
+  const sendB64 = soundType === 'custom' && customSoundB64 && customSoundB64 !== _sentCustomSoundB64;
+  fetch('/api/volume',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      volume: effectiveVol,
+      soundType: soundType,
+      customSoundB64: sendB64 ? customSoundB64 : null
+    })}).then(r=>{ if(r.ok && sendB64) _sentCustomSoundB64 = customSoundB64; }).catch(()=>{});
+}
+
+// サウンド種類
+let soundType='chime', customSoundB64=null, customSoundMime='audio/mpeg';
+
+function onSoundChange(val){
+  soundType=val;
+  document.getElementById('custom-sound-row').style.display=val==='custom'?'block':'none';
+  try{localStorage.setItem('soundType',val);}catch(e){}
+  _broadcastVolume();
+}
+
+// デコード済みAudioBufferをメモリに保持（再生時に高速・確実）
+let customDecodedBuffer = null;
+
+function onCustomSoundSelected(input){
+  const file=input.files[0]; if(!file) return;
+  const ext=file.name.split('.').pop().toLowerCase();
+  // WAV・OGGを推奨（ElectronでMP3デコードに失敗するケースがある）
+  if(!['wav','ogg','mp3','m4a'].includes(ext)){
+    sysLog('error','🔔 対応形式: WAV / OGG / MP3 / M4A'); return;
+  }
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const arrayBuf=e.target.result;
+    // 選択時に即デコードして検証
+    const AudioCtx=window.AudioContext||window.webkitAudioContext;
+    const ctx=new AudioCtx();
+    ctx.decodeAudioData(arrayBuf.slice(0), decoded=>{
+      customDecodedBuffer=decoded;
+      // Base64でも保存（再起動後の復元用）
+      const b64=_arrayBufToB64(arrayBuf);
+      customSoundB64=b64;
+      customSoundMime='decoded'; // デコード済みフラグ
+      document.getElementById('custom-sound-name').textContent=file.name+' ✅';
+      try{
+        if(b64.length<5*1024*1024){
+          localStorage.setItem('customSoundB64',b64);
+          localStorage.setItem('customSoundMime','raw');
+          localStorage.setItem('customSoundName',file.name);
+        }
+      }catch(e){}
+      sysLog('info','🔔 カスタムサウンド読み込み成功: '+file.name);
+      _broadcastVolume();
+      ctx.close();
+    }, err=>{
+      sysLog('error','🔔 このファイルは再生できません。WAVまたはOGGをお試しください。');
+      ctx.close();
+    });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function _arrayBufToB64(buf){
+  const bytes=new Uint8Array(buf);
+  let bin='';
+  for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+function testSound(){
+  if(soundMuted){sysLog('info','🔇 ミュート中');return;}
+  try{
+    if(soundType==='custom'){
+      if(!customDecodedBuffer&&!customSoundB64){
+        sysLog('error','🔔 音声ファイルが未設定です'); return;
+      }
+      try{
+        const AudioCtx=window.AudioContext||window.webkitAudioContext;
+        const ctx=new AudioCtx();
+        const playBuffer=buf=>{
+          const s=ctx.createBufferSource(),g=ctx.createGain();
+          s.buffer=buf; s.connect(g); g.connect(ctx.destination);
+          g.gain.value=soundVolume; s.start(0);
+          s.onended=()=>ctx.close();
+        };
+        if(customDecodedBuffer){
+          // メモリ上のデコード済みバッファを使用（最速・確実）
+          playBuffer(customDecodedBuffer);
+        } else {
+          // 再起動後などdecodedBufferがない場合はBase64から再デコード
+          const bin=atob(customSoundB64);
+          const bytes=new Uint8Array(bin.length);
+          for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+          ctx.decodeAudioData(bytes.buffer, playBuffer, err=>{
+            sysLog('error','🔔 再生失敗。WAV/OGGファイルを使用してください。');
+            ctx.close();
+          });
+        }
+      }catch(e){sysLog('error','🔔 '+e.message);}
+      return;
+    }
+    const AudioCtx=window.AudioContext||window.webkitAudioContext;
+    const ctx=new AudioCtx(), now=ctx.currentTime, vol=soundVolume;
+    if(soundType==='fanfare'){
+      [[392,0],[523.25,.18],[659.25,.36],[783.99,.54],[1046.5,.72]].forEach(([f,t])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='sawtooth';o.frequency.value=f;
+        g.gain.setValueAtTime(0,now+t);g.gain.linearRampToValueAtTime(.2*vol,now+t+.04);
+        g.gain.exponentialRampToValueAtTime(.001,now+t+.35);o.start(now+t);o.stop(now+t+.4);
+      });
+    } else if(soundType==='drumroll'){
+      const bo=ctx.createOscillator(),bg=ctx.createGain();
+      bo.connect(bg);bg.connect(ctx.destination);bo.type='sine';
+      bo.frequency.setValueAtTime(150,now);bo.frequency.exponentialRampToValueAtTime(40,now+.4);
+      bg.gain.setValueAtTime(.5*vol,now);bg.gain.exponentialRampToValueAtTime(.001,now+.5);
+      bo.start(now);bo.stop(now+.5);
+      for(let i=0;i<10;i++){
+        const t=now+.04*i,buf=ctx.createBuffer(1,ctx.sampleRate*.05,ctx.sampleRate);
+        const d=buf.getChannelData(0); for(let j=0;j<d.length;j++) d[j]=Math.random()*2-1;
+        const s=ctx.createBufferSource(),sg=ctx.createGain(),sf=ctx.createBiquadFilter();
+        sf.type='bandpass';sf.frequency.value=3000;s.buffer=buf;
+        s.connect(sf);sf.connect(sg);sg.connect(ctx.destination);
+        sg.gain.setValueAtTime((.04+i*.02)*vol,t);sg.gain.exponentialRampToValueAtTime(.001,t+.05);s.start(t);
+      }
+    } else if(soundType==='magical'){
+      [523.25,659.25,783.99,1046.5,1318.5,1567.98].forEach((f,i)=>{
+        const t=now+i*.08,o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=f;
+        g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.18*vol,t+.02);
+        g.gain.exponentialRampToValueAtTime(.001,t+.4);o.start(t);o.stop(t+.45);
+      });
+    } else if(soundType==='pinpon'){
+      [[1046.5,0,.15],[523.25,.22,.2]].forEach(([f,t,v])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=f;
+        g.gain.setValueAtTime(v*vol,now+t);g.gain.exponentialRampToValueAtTime(.001,now+t+.6);
+        o.start(now+t);o.stop(now+t+.65);
+      });
+    } else {
+      function bell(f,t,v){
+        const o1=ctx.createOscillator(),g1=ctx.createGain();
+        o1.connect(g1);g1.connect(ctx.destination);o1.type='sine';o1.frequency.value=f;
+        g1.gain.setValueAtTime(v*vol,now+t);g1.gain.exponentialRampToValueAtTime(.001,now+t+1.8);
+        o1.start(now+t);o1.stop(now+t+2.0);
+        const o2=ctx.createOscillator(),g2=ctx.createGain();
+        o2.connect(g2);g2.connect(ctx.destination);o2.type='sine';o2.frequency.value=f*2.756;
+        g2.gain.setValueAtTime(v*.4*vol,now+t);g2.gain.exponentialRampToValueAtTime(.001,now+t+.8);
+        o2.start(now+t);o2.stop(now+t+1.0);
+      }
+      bell(523.25,0,.30);bell(659.25,.22,.25);bell(783.99,.44,.35);
+    }
+  }catch(e){sysLog('error','🔔 サウンドエラー:'+e.message);}
+}
+
+function openReleasePage(){
+  if(isElectron&&window.electronAPI?.openExternal)
+    electronAPI.openExternal('https://github.com/Luca3yt/YRCM/releases');
+  else window.open('https://github.com/Luca3yt/YRCM/releases','_blank');
+}
+function initFooter(){
+  const el=document.getElementById('footer-ver'); if(!el) return;
+  if(isElectron&&window.electronAPI?.getVersion)
+    electronAPI.getVersion().then(v=>el.textContent='v'+v).catch(()=>{});
+}
+
+
+
+// ══ カードのドラッグ&ドロップ ══
+let dragSrcCard = null;
+
+function onCardDragStart(e){
+  // input・button・select 上のドラッグはカード移動させない
+  const tag = e.target.tagName;
+  if(tag==='INPUT'||tag==='BUTTON'||tag==='SELECT'||tag==='TEXTAREA'){
+    e.preventDefault(); return;
+  }
+  dragSrcCard = e.currentTarget;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(()=>dragSrcCard.classList.add('dragging'), 0);
+}
+
+function onCardDragEnd(e){
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.card').forEach(c=>c.classList.remove('drag-over'));
+  saveCardOrder();
+}
+
+function onCardDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const target = e.currentTarget;
+  if(target !== dragSrcCard) target.classList.add('drag-over');
+}
+
+function onCardDragLeave(e){
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onGridDragOver(e){ e.preventDefault(); }
+
+function onGridDrop(e){
+  e.preventDefault();
+  const target = e.target.closest('.card');
+  if(!target || target === dragSrcCard) return;
+  const grid = document.getElementById('content');
+  const cards = [...grid.children];
+  const srcIdx = cards.indexOf(dragSrcCard);
+  const tgtIdx = cards.indexOf(target);
+  if(srcIdx < 0 || tgtIdx < 0) return;
+  if(srcIdx < tgtIdx) grid.insertBefore(dragSrcCard, target.nextSibling);
+  else                grid.insertBefore(dragSrcCard, target);
+  target.classList.remove('drag-over');
+}
+
+function saveCardOrder(){
+  // 固定レイアウトのため無効化
+}
+
+function restoreCardOrder(){
+  // 固定レイアウトのため無効化。古い保存順序を削除
+  try{ localStorage.removeItem('cardOrder'); }catch(e){}
+}
+
+function showChangelog(notes){
+  if(!notes)return;
+  const area=document.getElementById('changelog-area');
+  const text=document.getElementById('changelog-text');
+  const plain=parseNotes(notes);
+  if(!plain)return;
+  text.textContent=plain;
+  area.style.display='block';
+}
+
+function parseNotes(notes){
+  if(!notes)return'';
+  if(typeof notes==='string')return notes.replace(/<[^>]+>/g,'').trim();
+  if(Array.isArray(notes)){
+    // [{version:'1.1.0', note:'...'}, ...] 形式（複数バージョン分）
+    return notes.map(n=>{
+      if(typeof n==='object'){
+        const ver = n.version ? `── v${n.version} ──` : '';
+        const body = (n.note||'').replace(/<[^>]+>/g,'').trim();
+        return ver ? `${ver}\n${body}` : body;
+      }
+      return String(n);
+    }).join('\n\n').trim();
+  }
+  return'';
+}
+
+function showUpdateDate(dateStr){
+  if(!dateStr)return;
+  const el=document.getElementById('update-date');
+  if(!el)return;
+  try{
+    const d=new Date(dateStr);
+    el.textContent=d.toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  }catch(e){}
+}
+
+// アップデート後チェンジログポップアップ
+function showUpdatePopup(version, notes, releaseDate){
+  const plain=parseNotes(notes);
+  let title=`v${version} へアップデートしました`;
+  if(releaseDate){
+    try{
+      const d=new Date(releaseDate);
+      title+=`  ${d.toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}`;
+    }catch(e){}
+  }
+  document.getElementById('up-version-title').textContent=title;
+  document.getElementById('up-notes-text').textContent=plain||'変更内容はGitHub Releasesをご確認ください。';
+  document.getElementById('update-popup').classList.add('show');
+}
+
+function closeUpdatePopup(){
+  document.getElementById('update-popup').classList.remove('show');
+  try{localStorage.removeItem('pendingChangelog');}catch(e){}
+}
+
+// 起動時にアップデート後フラグを確認
+function checkPendingChangelog(){
+  try{
+    const data=localStorage.getItem('pendingChangelog');
+    if(!data)return;
+    const {version,notes,releaseDate}=JSON.parse(data);
+    setTimeout(()=>showUpdatePopup(version,notes,releaseDate),1500);
+  }catch(e){}
+}
+
+// ══════════════════════════════════
+// 視聴者数グラフ
+// ══════════════════════════════════
+let viewersHistory = [];
+
+function updateViewers(viewers, history){
+  const el = document.getElementById('sb-viewers-num');
+  if(el) el.textContent = viewers + ' 人';
+  const el2 = document.getElementById('cp-viewers');
+  if(el2) el2.textContent = viewers + ' 人';
+  if(history && history.length) viewersHistory = history;
+  else { viewersHistory.push({t: Date.now(), v: viewers}); if(viewersHistory.length > 200) viewersHistory.shift(); }
+  const panel = document.getElementById('viewers-graph-panel');
+  if(panel && panel.classList.contains('open')) drawViewersGraph();
+}
+
+function toggleViewersGraph(){
+  const panel = document.getElementById('viewers-graph-panel');
+  if(!panel) return;
+  const isOpen = panel.classList.toggle('open');
+  if(isOpen) drawViewersGraph();
+}
+
+function drawViewersGraph(){
+  const canvas = document.getElementById('viewers-canvas');
+  if(!canvas) return;
+  const wrap = document.getElementById('viewers-graph-wrap');
+  canvas.width  = wrap.clientWidth;
+  canvas.height = wrap.clientHeight - 22;
+  canvas.style.marginTop = '18px';
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  if(viewersHistory.length < 2){
+    ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.font = '11px monospace';
+    ctx.textAlign = 'center'; ctx.fillText('データ収集中...', W/2, H/2); return;
+  }
+  const vals = viewersHistory.map(h => { const n = parseInt(String(h.v).replace(/[^0-9]/g,'')); return isNaN(n)?0:n; });
+  const times = viewersHistory.map(h => h.t);
+  const minV = Math.min(...vals), maxV = Math.max(...vals), range = maxV - minV || 1;
+  const minT = times[0], maxT = times[times.length-1], timeRange = maxT - minT || 1;
+  const padL=4,padR=4,padT=4,padB=18,gW=W-padL-padR,gH=H-padT-padB;
+  const toX = t => padL + ((t-minT)/timeRange)*gW;
+  const toY = v => padT + (1-(v-minV)/range)*gH;
+  ctx.strokeStyle='rgba(255,255,255,.06)'; ctx.lineWidth=1;
+  for(let i=0;i<=2;i++){ const y=padT+(gH/2)*i; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke(); }
+  const grad=ctx.createLinearGradient(0,padT,0,H-padB);
+  grad.addColorStop(0,'rgba(100,180,255,.35)'); grad.addColorStop(1,'rgba(100,180,255,.02)');
+  ctx.beginPath(); ctx.moveTo(toX(times[0]),H-padB);
+  for(let i=0;i<vals.length;i++) ctx.lineTo(toX(times[i]),toY(vals[i]));
+  ctx.lineTo(toX(times[times.length-1]),H-padB); ctx.closePath();
+  ctx.fillStyle=grad; ctx.fill();
+  ctx.beginPath(); ctx.strokeStyle='rgba(100,200,255,.9)'; ctx.lineWidth=1.5; ctx.lineJoin='round';
+  for(let i=0;i<vals.length;i++) i===0?ctx.moveTo(toX(times[i]),toY(vals[i])):ctx.lineTo(toX(times[i]),toY(vals[i]));
+  ctx.stroke();
+  const lastVal = viewersHistory[viewersHistory.length-1].v;
+  ctx.fillStyle='rgba(100,200,255,.8)'; ctx.font='10px monospace'; ctx.textAlign='right';
+  ctx.fillText(lastVal, W-padR, toY(vals[vals.length-1])-4);
+  ctx.fillStyle='rgba(255,255,255,.25)'; ctx.font='9px monospace'; ctx.textAlign='left';
+  ctx.fillText(maxV.toLocaleString(), padL, padT+10);
+  ctx.fillText(minV.toLocaleString(), padL, H-padB-2);
+}
+
+// ══════════════════════════════════
+// 配信サマリー
+// ══════════════════════════════════
+let lastSummaryData = null;
+
+function showSessionSummary(msg){
+  lastSummaryData = msg;
+  const el = document.getElementById('summary-stream-title');
+  if(el) el.textContent = msg.title ? (msg.title + (msg.channel ? ' / '+msg.channel : '')) : '';
+  const sc = document.getElementById('sum-count');
+  if(sc) sc.textContent = (msg.totalCount||0).toLocaleString();
+  const sd = document.getElementById('sum-duration');
+  if(sd) sd.textContent = msg.duration || '--';
+  const ss = document.getElementById('sum-speed');
+  if(ss) ss.textContent = (msg.speedPerHour||0).toLocaleString() + ' / 時';
+  const achieved = (msg.achieved||[]).sort((a,b)=>a-b);
+  const sm = document.getElementById('sum-milestones');
+  if(sm) sm.textContent = achieved.length ? '🏆 達成: ' + achieved.map(m=>m.toLocaleString()).join(' → ') : '（マイルストーン未達成）';
+  const discord = buildDiscordText(msg, achieved);
+  const sd2 = document.getElementById('sum-discord');
+  if(sd2) sd2.textContent = discord;
+  const modal = document.getElementById('summary-modal');
+  if(modal) modal.classList.add('show');
+  sysLog('milestone', '📊 配信サマリーを表示');
+}
+
+function buildDiscordText(msg, achieved){
+  const lines = [];
+  lines.push('```');
+  lines.push('📊 配信リアクションまとめ');
+  if(msg.title) lines.push('🎬 ' + msg.title);
+  lines.push('━━━━━━━━━━━━━━━━');
+  lines.push('❤️  総リアクション数  ' + (msg.totalCount||0).toLocaleString());
+  lines.push('⏱  配信時間          ' + (msg.duration||'--'));
+  lines.push('⚡  平均時速          ' + (msg.speedPerHour||0).toLocaleString() + ' / 時');
+  if(achieved && achieved.length){
+    lines.push('━━━━━━━━━━━━━━━━');
+    lines.push('🏆 達成マイルストーン');
+    lines.push('  ' + achieved.map(m=>m.toLocaleString()).join(' → '));
+  }
+  lines.push('━━━━━━━━━━━━━━━━');
+  if(msg.videoId) lines.push('🔗 https://youtu.be/' + msg.videoId);
+  lines.push('```');
+  return lines.join('\n');
+}
+
+function copyDiscord(){
+  const el = document.getElementById('sum-discord');
+  if(!el) return;
+  navigator.clipboard.writeText(el.textContent).then(()=>{
+    const btn = document.querySelector('#summary-modal .btn-primary');
+    if(!btn) return;
+    const orig = btn.textContent;
+    btn.textContent = '✅ コピーしました！';
+    setTimeout(()=>btn.textContent=orig, 2000);
+  }).catch(()=>{});
+}
+
+function closeSummary(){
+  const modal = document.getElementById('summary-modal');
+  if(modal) modal.classList.remove('show');
+}
+
+// ══════════════════════════════════
+// Discord WebHook
+// ══════════════════════════════════
+let discordWebhookUrl = '';
+
+function loadWebhook(){
+  try{ discordWebhookUrl = localStorage.getItem('discordWebhookUrl') || ''; }catch(e){}
+  const inp = document.getElementById('webhook-url-input');
+  if(inp && discordWebhookUrl) inp.value = discordWebhookUrl;
+  updateWebhookStatus();
+}
+
+function saveWebhook(url){
+  discordWebhookUrl = url.trim();
+  try{ localStorage.setItem('discordWebhookUrl', discordWebhookUrl); }catch(e){}
+  updateWebhookStatus();
+}
+
+function onWebhookInput(val){
+  saveWebhook(val);
+}
+
+function clearWebhook(){
+  discordWebhookUrl = '';
+  try{ localStorage.removeItem('discordWebhookUrl'); }catch(e){}
+  const inp = document.getElementById('webhook-url-input');
+  if(inp) inp.value = '';
+  updateWebhookStatus();
+}
+
+function updateWebhookStatus(){
+  const el = document.getElementById('webhook-status');
+  if(!el) return;
+  if(discordWebhookUrl){
+    el.textContent = '✅ 設定済み';
+    el.style.color = 'var(--green)';
+  } else {
+    el.textContent = '未設定';
+    el.style.color = 'rgba(255,255,255,.2)';
+  }
+}
+
+async function sendToDiscord(){
+  const el = document.getElementById('sum-discord');
+  if(!el){ sysLog('error','📋 送信するデータがありません'); return; }
+  if(!discordWebhookUrl){
+    sysLog('error','❌ Discord WebHook URLが未設定です（設定カードに入力してください）');
+    return;
+  }
+  const btn = document.getElementById('discord-send-btn');
+  if(btn){ btn.textContent = '送信中...'; btn.disabled = true; }
+  try{
+    // CSP で discord.com への直接送信は弾かれるため、ローカルサーバー経由で送る
+    const res = await fetch('/api/discord', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ webhookUrl: discordWebhookUrl, content: el.textContent })
+    });
+    const data = await res.json().catch(()=>({ok:false,error:'サーバーの応答が不正です'}));
+    if(data.ok){
+      sysLog('info','✅ Discordに送信しました');
+      if(btn){ btn.textContent = '✅ 送信完了'; setTimeout(()=>{ btn.textContent='🔔 Discordに送信'; btn.disabled=false; }, 2000); }
+    } else {
+      sysLog('error','❌ Discord送信失敗: ' + (data.error || res.status));
+      if(btn){ btn.textContent = '❌ 送信失敗'; setTimeout(()=>{ btn.textContent='🔔 Discordに送信'; btn.disabled=false; }, 2000); }
+      // URLは残す（設定カードで修正可能）
+    }
+  } catch(e){
+    sysLog('error','❌ Discord送信エラー: ' + e.message);
+    if(btn){ btn.textContent = '❌ エラー'; setTimeout(()=>{ btn.textContent='🔔 Discordに送信'; btn.disabled=false; }, 2000); }
+  }
+}
+
+
+
+init();
+</script>
+
+<!-- 目標クリアトースト -->
+<div class="goal-toast" id="goal-toast"></div>
+
+
+<!-- 目標設定モーダル -->
+<div id="goal-modal">
+  <div class="goal-modal-box">
+    <div class="goal-modal-title">
+      🎯 目標を設定
+      <button class="goal-modal-close" onclick="closeGoalModal()">✕</button>
+    </div>
+    <div class="goal-modal-list" id="goal-modal-list"></div>
+    <div class="goal-modal-add">
+      <input class="goal-add-input" id="goal-input" type="number" min="1" placeholder="数値を入力（例: 500）" onkeydown="if(event.key==='Enter')addGoal()" style="flex:1">
+      <button class="btn btn-ghost" onclick="addGoal()" style="font-size:11px;padding:6px 14px;flex-shrink:0">＋ 追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- 配信サマリーモーダル -->
+<div id="summary-modal">
+  <div class="summary-box">
+    <div class="summary-title">📊 配信サマリー</div>
+    <div class="summary-sub" id="summary-stream-title"></div>
+    <div class="summary-stat"><span class="summary-stat-label">総リアクション数</span><span class="summary-stat-value" id="sum-count">0</span></div>
+    <div class="summary-stat"><span class="summary-stat-label">配信時間</span><span class="summary-stat-value" id="sum-duration">──</span></div>
+    <div class="summary-stat"><span class="summary-stat-label">平均時速</span><span class="summary-stat-value" id="sum-speed">──</span></div>
+    <div class="summary-milestones" id="sum-milestones"></div>
+    <div style="font-size:10px;color:var(--sub);margin:12px 0 4px">📋 Discord用テキスト（クリックでコピー）</div>
+    <div class="summary-discord" id="sum-discord" onclick="copyDiscord()"></div>
+    <div class="summary-btn-row">
+      <button class="btn btn-primary" onclick="copyDiscord()" style="flex:1">📋 コピー</button>
+      <button class="btn btn-ghost" id="discord-send-btn" onclick="sendToDiscord()" style="flex:1;background:rgba(88,101,242,.15);border-color:rgba(88,101,242,.3);color:#7289da">🔔 Discordに送信</button>
+      <button class="btn btn-ghost" onclick="closeSummary()" style="flex:1">閉じる</button>
+    </div>
+  </div>
+</div>
+<div id="app-footer" style="text-align:center;padding:4px;font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;background:transparent">
+  <a href="#" onclick="openReleasePage();return false;" style="color:rgba(255,255,255,.2);text-decoration:none" id="footer-ver">v--</a>
+</div>
+</body>
+</html>

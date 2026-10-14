@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reaction Milestone Overlay</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Bebas+Neue&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    font-family: 'Noto Sans JP', sans-serif;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  /* ===== TOAST ===== */
+  #toast {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    width: 380px;
+    transform: translateX(460px);
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 9999;
+    pointer-events: none;
+  }
+
+  #toast.show { transform: translateX(0); }
+  #toast.hide {
+    transform: translateX(460px);
+    transition: transform 0.5s cubic-bezier(0.55, 0, 1, 0.45);
+  }
+
+  .toast-inner {
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 18px 22px 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,200,0,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .toast-inner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff0000, #ff6b00, #ffd700, #ff6b00, #ff0000);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  .toast-glow {
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(255,100,0,0.15) 0%, transparent 70%);
+    animation: pulseGlow 2s ease-in-out infinite alternate;
+  }
+  @keyframes pulseGlow { from { opacity: 0.5; transform: scale(0.9); } to { opacity: 1; transform: scale(1.1); } }
+
+  .toast-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .trophy-icon { font-size: 22px; animation: trophyBounce 0.6s ease-in-out 0.2s both; }
+  @keyframes trophyBounce {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    30% { transform: scale(1.4) rotate(-10deg); }
+    60% { transform: scale(1.2) rotate(5deg); }
+  }
+
+  .achievement-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #ffd700;
+  }
+
+  .milestone-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    line-height: 1;
+    color: #ffffff;
+    text-shadow: 0 0 30px rgba(255,150,0,0.6);
+    letter-spacing: 2px;
+    animation: countUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+  }
+  @keyframes countUp { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .milestone-title {
+    font-size: 13px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 700;
+    margin-top: 2px;
+    margin-bottom: 12px;
+  }
+
+  .stats-row { display: flex; gap: 8px; margin-top: 4px; }
+
+  .stat-card {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 8px 10px;
+    text-align: center;
+    animation: fadeSlideUp 0.4s ease both;
+  }
+  .stat-card:nth-child(1) { animation-delay: 0.35s; }
+  .stat-card:nth-child(2) { animation-delay: 0.45s; }
+  .stat-card:nth-child(3) { animation-delay: 0.55s; }
+  @keyframes fadeSlideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #fff; line-height: 1; }
+  .stat-value.hot { color: #ff6b35; text-shadow: 0 0 10px rgba(255,100,0,0.5); }
+  .stat-label { font-size: 9px; color: rgba(255,255,255,0.45); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; }
+
+  .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; border-radius: 16px; }
+  .particle {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    animation: particleFly 1.2s ease-out both;
+  }
+  @keyframes particleFly { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
+
+  .progress-section { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); }
+  .progress-label { display: flex; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,0.4); margin-bottom: 5px; }
+  .progress-bar-bg { background: rgba(255,255,255,0.08); border-radius: 4px; height: 4px; overflow: hidden; }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #ff6b00, #ffd700);
+    width: 0%;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px rgba(255,150,0,0.6);
+  }
+
+  /* ===== 進捗トースト ===== */
+  #progress-toast {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    width: 380px;
+    transform: translateX(460px);
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 9998; /* 実績トーストより下 */
+    pointer-events: none;
+  }
+
+  #progress-toast.show { transform: translateX(0); }
+  #progress-toast.hide {
+    transform: translateX(460px);
+    transition: transform 0.5s cubic-bezier(0.55, 0, 1, 0.45);
+  }
+
+  /* 実績トーストが表示中は進捗トーストを少し上にずらす */
+  #toast.show ~ #progress-toast.show,
+  body.milestone-showing #progress-toast.show {
+    bottom: 280px;
+  }
+
+  .progress-toast-inner {
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px;
+    padding: 16px 20px 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(100,180,255,0.1), inset 0 1px 0 rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 青系のシマーライン（実績トーストと区別） */
+  .progress-toast-inner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0066ff, #00ccff, #0099ff, #00ccff, #0066ff);
+    background-size: 200% 100%;
+    animation: shimmer 2.5s linear infinite;
+  }
+
+  .progress-toast-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .progress-label-text {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #64b4ff;
+  }
+
+  .progress-count {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 46px;
+    line-height: 1;
+    color: #ffffff;
+    text-shadow: 0 0 20px rgba(100,180,255,0.4);
+    letter-spacing: 2px;
+    animation: countUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+  }
+
+  .progress-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 2px;
+    margin-bottom: 10px;
+  }
+
+  .progress-stats-row { display: flex; gap: 8px; margin-bottom: 12px; }
+
+  .progress-stat {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 7px 8px;
+    text-align: center;
+    animation: fadeSlideUp 0.4s ease both;
+  }
+  .progress-stat:nth-child(1) { animation-delay: 0.25s; }
+  .progress-stat:nth-child(2) { animation-delay: 0.35s; }
+  .progress-stat:nth-child(3) { animation-delay: 0.45s; }
+
+  .progress-stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: #fff;
+    line-height: 1;
+  }
+  .progress-stat-value.accent { color: #64b4ff; }
+  .progress-stat-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  .progress-bar-section {}
+  .progress-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 5px;
+  }
+  .progress-bar-bg2 {
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .progress-bar-fill2 {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #0066ff, #00ccff);
+    width: 0%;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px rgba(0,150,255,0.5);
+  }
+  .progress-pct {
+    text-align: right;
+    font-size: 10px;
+    color: #64b4ff;
+    margin-top: 4px;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 1px;
+  }
+
+  /* ===== 接続インジケーター (OBSプレビュー用) ===== */
+  #ws-indicator {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    background: rgba(0,0,0,0.4);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  #ws-dot { width: 6px; height: 6px; border-radius: 50%; background: #444; }
+  #ws-dot.on { background: #00e676; box-shadow: 0 0 6px #00e676; }
+  #ws-dot.off { background: #ff1744; animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: 0.3; } }
+
+  /* ① キャッシュ未更新警告 */
+  #cache-warning {
+    position: fixed; inset: 0;
+    background: rgba(180, 0, 0, 0.55);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9999; transition: opacity 0.8s; pointer-events: none;
+  }
+  #cache-warning.hidden { opacity: 0; }
+  #cache-warning-banner {
+    background: rgba(200,0,0,0.9); color: #fff;
+    font-size: 18px; font-weight: 700;
+    padding: 14px 32px; border-radius: 12px;
+    letter-spacing: 2px; text-align: center;
+    box-shadow: 0 4px 32px rgba(255,0,0,0.5);
+    animation: pulse-warn 1.5s infinite;
+  }
+  #cache-warning-sub { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 10px; letter-spacing: 1px; }
+  @keyframes pulse-warn { 50% { opacity: 0.7; } }
+
+  /* ② LIVE バッジのフェードアウト */
+  #ws-indicator { transition: opacity 1s; }
+  #ws-indicator.fade-out { opacity: 0; }
+</style>
+</head>
+<body>
+
+<!-- ① キャッシュ未更新警告オーバーレイ -->
+<div id="cache-warning">
+  <div id="cache-warning-banner">⚠️ OBS のキャッシュを更新してください</div>
+  <div id="cache-warning-sub">ブラウザソースを右クリック →「キャッシュを更新」</div>
+</div>
+
+<div id="ws-indicator">
+  <div id="ws-dot"></div>
+  <span id="ws-text">接続中…</span>
+</div>
+
+<div id="toast">
+  <div class="toast-inner">
+    <div class="toast-glow"></div>
+    <div class="particles" id="particles"></div>
+
+    <div class="toast-header">
+      <span class="trophy-icon" id="trophy-icon">🏆</span>
+      <span class="achievement-label">Reaction Achievement</span>
+    </div>
+
+    <div class="milestone-number" id="milestone-num">1000</div>
+    <div class="milestone-title" id="milestone-title">🎉 リアクション 1,000 突破！</div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value hot" id="stat-speed">--</div>
+        <div class="stat-label">/ 時速</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-elapsed">--</div>
+        <div class="stat-label">達成時間</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-next">--</div>
+        <div class="stat-label">次の目標</div>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-label">
+        <span id="prog-from">0</span>
+        <span id="prog-to">次の目標</span>
+      </div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 進捗トースト -->
+<div id="progress-toast">
+  <div class="progress-toast-inner">
+    <div class="progress-toast-header">
+      <span style="font-size:18px;">📊</span>
+      <span class="progress-label-text">Reaction Progress</span>
+    </div>
+
+    <div class="progress-count" id="prog-count">0</div>
+    <div class="progress-sub" id="prog-sub">次の目標まで <strong id="prog-remaining">--</strong></div>
+
+    <div class="progress-stats-row">
+      <div class="progress-stat">
+        <div class="progress-stat-value accent" id="prog-speed">--</div>
+        <div class="progress-stat-label">/ 時速</div>
+      </div>
+      <div class="progress-stat">
+        <div class="progress-stat-value" id="prog-elapsed">--</div>
+        <div class="progress-stat-label">経過時間</div>
+      </div>
+      <div class="progress-stat">
+        <div class="progress-stat-value" id="prog-next-val">--</div>
+        <div class="progress-stat-label">次の目標</div>
+      </div>
+    </div>
+
+    <div class="progress-bar-section">
+      <div class="progress-bar-labels">
+        <span id="prog-bar-from">0</span>
+        <span id="prog-bar-to">--</span>
+      </div>
+      <div class="progress-bar-bg2">
+        <div class="progress-bar-fill2" id="progress-bar-fill2"></div>
+      </div>
+      <div class="progress-pct" id="prog-pct">0%</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WS_URL = `ws://${location.hostname}:3001`;
+let soundVolume = 1.0;      // 音量（0.0〜1.0）
+let soundType = 'chime';    // 音の種類
+let customSoundB64 = null;
+let customDecodedBuffer = null;
+
+// ===== 効果音（Web Audio API - ファイル不要）=====
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playAchievementSound() {
+  try {
+    const ctx = getAudioCtx();
+    const vol = soundVolume;
+    const now = ctx.currentTime;
+
+    // カスタム音源
+    if (soundType === 'custom' && customDecodedBuffer) {
+      const s = ctx.createBufferSource(), g = ctx.createGain();
+      s.buffer = customDecodedBuffer; s.connect(g); g.connect(ctx.destination);
+      g.gain.value = vol; s.start(0);
+      return;
+    }
+
+    if (soundType === 'fanfare') {
+      [[392,0],[523.25,.18],[659.25,.36],[783.99,.54],[1046.5,.72]].forEach(([f,t])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='sawtooth';o.frequency.value=f;
+        g.gain.setValueAtTime(0,now+t);g.gain.linearRampToValueAtTime(.2*vol,now+t+.04);
+        g.gain.exponentialRampToValueAtTime(.001,now+t+.35);o.start(now+t);o.stop(now+t+.4);
+      });
+    } else if (soundType === 'drumroll') {
+      const bo=ctx.createOscillator(),bg=ctx.createGain();
+      bo.connect(bg);bg.connect(ctx.destination);bo.type='sine';
+      bo.frequency.setValueAtTime(150,now);bo.frequency.exponentialRampToValueAtTime(40,now+.4);
+      bg.gain.setValueAtTime(.5*vol,now);bg.gain.exponentialRampToValueAtTime(.001,now+.5);
+      bo.start(now);bo.stop(now+.5);
+      for(let i=0;i<10;i++){
+        const t=now+.04*i,buf=ctx.createBuffer(1,ctx.sampleRate*.05,ctx.sampleRate);
+        const d=buf.getChannelData(0); for(let j=0;j<d.length;j++) d[j]=Math.random()*2-1;
+        const s=ctx.createBufferSource(),sg=ctx.createGain(),sf=ctx.createBiquadFilter();
+        sf.type='bandpass';sf.frequency.value=3000;s.buffer=buf;
+        s.connect(sf);sf.connect(sg);sg.connect(ctx.destination);
+        sg.gain.setValueAtTime((.04+i*.02)*vol,t);sg.gain.exponentialRampToValueAtTime(.001,t+.05);s.start(t);
+      }
+    } else if (soundType === 'magical') {
+      [523.25,659.25,783.99,1046.5,1318.5,1567.98].forEach((f,i)=>{
+        const t=now+i*.08,o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=f;
+        g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.18*vol,t+.02);
+        g.gain.exponentialRampToValueAtTime(.001,t+.4);o.start(t);o.stop(t+.45);
+      });
+    } else if (soundType === 'pinpon') {
+      [[1046.5,0,.15],[523.25,.22,.2]].forEach(([f,t,v])=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=f;
+        g.gain.setValueAtTime(v*vol,now+t);g.gain.exponentialRampToValueAtTime(.001,now+t+.6);
+        o.start(now+t);o.stop(now+t+.65);
+      });
+    } else {
+      // デフォルト: チャイム
+      function bell(f,t,v){
+        const o1=ctx.createOscillator(),g1=ctx.createGain();
+        o1.connect(g1);g1.connect(ctx.destination);o1.type='sine';o1.frequency.value=f;
+        g1.gain.setValueAtTime(v*vol,now+t);g1.gain.exponentialRampToValueAtTime(.001,now+t+1.8);
+        o1.start(now+t);o1.stop(now+t+2.0);
+        const o2=ctx.createOscillator(),g2=ctx.createGain();
+        o2.connect(g2);g2.connect(ctx.destination);o2.type='sine';o2.frequency.value=f*2.756;
+        g2.gain.setValueAtTime(v*.4*vol,now+t);g2.gain.exponentialRampToValueAtTime(.001,now+t+.8);
+        o2.start(now+t);o2.stop(now+t+1.0);
+      }
+      bell(523.25,0,.30);bell(659.25,.22,.25);bell(783.99,.44,.35);
+    }
+  } catch (e) { console.error('sound error:', e); }
+}
+const MILESTONES = [100, 500, 1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 30000, 50000];
+const ICONS = { 100:'🌱', 500:'⭐', 1000:'🏆', 2000:'💫', 3000:'🔥', 5000:'👑', 7500:'💎', 10000:'🚀', 20000:'🌟', 50000:'🎆' };
+const DISPLAY_DURATION = 7000;
+
+let toastQueue = [];
+let isShowing = false;
+let toastTimer = null;
+let ws = null;
+
+// ===== WebSocket 接続 =====
+function connect() {
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    setWsStatus(true);
+    ws.send(JSON.stringify({ type: 'register', role: 'overlay' }));
+  };
+
+  ws.onmessage = (e) => {
+    let msg;
+    try { msg = JSON.parse(e.data); } catch (_) { return; }
+
+    if (msg.type === 'milestone') {
+      queueMilestone(msg);
+    }
+    if (msg.type === 'volume_update') {
+      soundVolume = Math.max(0, Math.min(1, msg.volume));
+      if (msg.soundType) soundType = msg.soundType;
+      // 同じ音源が再送されてきたときはデコードし直さない
+      if (msg.customSoundB64 && msg.customSoundB64 !== customSoundB64) {
+        customSoundB64 = msg.customSoundB64;
+        // デコードしてメモリ保持
+        try {
+          const bin = atob(customSoundB64);
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          ctx.decodeAudioData(bytes.buffer.slice(0), d => { customDecodedBuffer = d; ctx.close(); }, () => ctx.close());
+        } catch (e) {}
+      }
+    }
+    if (msg.type === 'progress') {
+      showProgressToast(msg);
+    }
+    if (msg.type === 'reset') {
+      toastQueue = [];
+      hideProgressToast();
+    }
+  };
+
+  // error のあとに close も必ず来るので、再接続は close でだけ行う
+  // （両方で再接続すると切断のたびに接続が倍々に増え、演出が何重にも出る）
+  ws.onerror = () => {};
+  ws.onclose = () => {
+    setWsStatus(false);
+    clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(connect, 3000);
+  };
+}
+let reconnectTimer = null;
+
+let liveTimer = null;
+
+function setWsStatus(online) {
+  document.getElementById('ws-dot').className = online ? 'on' : 'off';
+  document.getElementById('ws-text').textContent = online ? 'LIVE' : '再接続中…';
+
+  if (online) {
+    // ① キャッシュ更新済み確認 → 警告を消す
+    const warn = document.getElementById('cache-warning');
+    warn.classList.add('hidden');
+    setTimeout(() => { warn.style.display = 'none'; }, 900);
+
+    // ② LIVE バッジを 30 秒後にフェードアウト
+    clearTimeout(liveTimer);
+    document.getElementById('ws-indicator').classList.remove('fade-out');
+    liveTimer = setTimeout(() => {
+      document.getElementById('ws-indicator').classList.add('fade-out');
+    }, 30000);
+  } else {
+    // 切断時はLIVEバッジを再表示
+    clearTimeout(liveTimer);
+    document.getElementById('ws-indicator').classList.remove('fade-out');
+  }
+}
+
+// ===== キュー管理 =====
+function queueMilestone(data) {
+  toastQueue.push(data);
+  if (!isShowing) showNext();
+}
+
+function showNext() {
+  if (toastQueue.length === 0) { isShowing = false; return; }
+  isShowing = true;
+  showToast(toastQueue.shift());
+}
+
+// ===== トースト表示 =====
+function showToast(data) {
+  const { milestone, speed, elapsedMs } = data;
+
+  const prevIdx = MILESTONES.indexOf(milestone) - 1;
+  const prevMilestone = prevIdx >= 0 ? MILESTONES[prevIdx] : 0;
+  const nextMilestone = MILESTONES[MILESTONES.indexOf(milestone) + 1];
+
+  // 表示更新
+  document.getElementById('trophy-icon').textContent = ICONS[milestone] || '🎯';
+  document.getElementById('milestone-num').textContent = milestone.toLocaleString();
+  document.getElementById('milestone-title').textContent = `🎉 リアクション ${milestone.toLocaleString()} 突破！`;
+  document.getElementById('stat-speed').textContent = speed >= 10000 ? `${(speed/1000).toFixed(1)}k` : speed.toLocaleString();
+  document.getElementById('stat-elapsed').textContent = formatElapsed(elapsedMs);
+  document.getElementById('stat-next').textContent = nextMilestone ? nextMilestone.toLocaleString() : 'MAX';
+  document.getElementById('prog-from').textContent = prevMilestone.toLocaleString();
+  document.getElementById('prog-to').textContent = nextMilestone ? nextMilestone.toLocaleString() : '∞';
+
+  // 効果音再生
+  playAchievementSound();
+
+  // 表示
+  const toast = document.getElementById('toast');
+  toast.className = 'show';
+  spawnParticles();
+  setTimeout(() => { document.getElementById('progress-fill').style.width = '100%'; }, 100);
+
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+    toast.classList.add('hide');
+    document.getElementById('progress-fill').style.width = '0%';
+    setTimeout(() => { toast.classList.remove('hide'); isShowing = false; showNext(); }, 600);
+  }, DISPLAY_DURATION);
+}
+
+function formatElapsed(ms) {
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  if (h > 0) return `${h}h${m}m`;
+  if (m > 0) return `${m}m${s}s`;
+  return `${s}s`;
+}
+
+function spawnParticles() {
+  const container = document.getElementById('particles');
+  container.innerHTML = '';
+  const colors = ['#ffd700', '#ff6b00', '#ff4444', '#ffffff', '#ffaa00'];
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `left:${30+Math.random()*40}%;top:${20+Math.random()*40}%;background:${colors[i%colors.length]};--dx:${(Math.random()-0.5)*80}px;--dy:${-(20+Math.random()*60)}px;animation-delay:${Math.random()*0.3}s;animation-duration:${0.8+Math.random()*0.6}s;`;
+    container.appendChild(p);
+  }
+}
+
+// ===== 進捗トースト =====
+let progressTimer = null;
+const PROGRESS_DURATION = 6000;
+
+function showProgressToast(data) {
+  const { count, prevM, nextM, pct, speed, remaining, elapsedMs } = data;
+
+  // 実績トーストが表示中は少し上にずらす
+  const pt = document.getElementById('progress-toast');
+  if (isShowing) {
+    pt.style.bottom = '280px';
+  } else {
+    pt.style.bottom = '40px';
+  }
+
+  // 内容を更新
+  document.getElementById('prog-count').textContent = count.toLocaleString();
+  document.getElementById('prog-remaining').textContent =
+    nextM ? `あと ${remaining.toLocaleString()}` : 'MAX達成！🎆';
+  document.getElementById('prog-sub').innerHTML =
+    nextM ? `次の目標まで <strong id="prog-remaining" style="color:#fff">あと ${remaining.toLocaleString()}</strong>` : '🎆 全マイルストーン達成！';
+
+  document.getElementById('prog-speed').textContent =
+    speed >= 10000 ? `${(speed/1000).toFixed(1)}k` : speed.toLocaleString();
+  document.getElementById('prog-elapsed').textContent = formatElapsed(elapsedMs);
+  document.getElementById('prog-next-val').textContent =
+    nextM ? nextM.toLocaleString() : 'MAX';
+
+  document.getElementById('prog-bar-from').textContent = prevM.toLocaleString();
+  document.getElementById('prog-bar-to').textContent = nextM ? nextM.toLocaleString() : '∞';
+  document.getElementById('prog-pct').textContent = `${pct}%`;
+
+  // 表示
+  pt.className = 'show';
+  setTimeout(() => {
+    document.getElementById('progress-bar-fill2').style.width = pct + '%';
+  }, 100);
+
+  clearTimeout(progressTimer);
+  progressTimer = setTimeout(() => {
+    hideProgressToast();
+  }, PROGRESS_DURATION);
+}
+
+function hideProgressToast() {
+  const pt = document.getElementById('progress-toast');
+  pt.classList.remove('show');
+  pt.classList.add('hide');
+  document.getElementById('progress-bar-fill2').style.width = '0%';
+  setTimeout(() => pt.classList.remove('hide'), 600);
+}
+
+connect();
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+{
+  "name": "reaction-milestone",
+  "version": "1.6.3",
+  "description": "YouTube Live リアクション実績解除オーバーレイ",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64 --publish never",
+    "release": "electron-builder --win --x64 --publish always"
+  },
+  "build": {
+    "appId": "com.reactionmilestone.app",
+    "productName": "ReactionMilestone",
+    "copyright": "Copyright © 2025",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "server.js",
+      "overlay.html",
+      "admin.html",
+      "assets/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ReactionMilestone"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Luca3yt",
+      "repo": "YRCM"
+    }
+  },
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.1.0"
+  }
+}
