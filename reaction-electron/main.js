@@ -102,7 +102,7 @@ function createWindow() {
     minHeight: 500,
     frame: false,           // カスタムタイトルバー
     transparent: false,
-    backgroundColor: '#0d0d14',
+    backgroundColor: '#0b1020',
     webPreferences: {
       preload: path.join(app.getAppPath(), 'preload.js'),
       contextIsolation: true,

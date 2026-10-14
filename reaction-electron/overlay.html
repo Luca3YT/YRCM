@@ -7,6 +7,71 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Bebas+Neue&display=swap');
 
+  /* ══ テーマ（管理画面の設定から切り替わる） ══ */
+  body, body[data-theme="studio"] {
+    --t-bg: linear-gradient(140deg, #141d33 0%, #0e1527 100%);
+    --t-border: 1px solid #2a3758;
+    --t-shadow: 0 20px 60px rgba(0,0,0,.75), 0 0 0 1px rgba(255,122,61,.12);
+    --t-radius: 18px;
+    --t-text: #ffffff; --t-sub: rgba(232,236,246,.78); --t-muted: rgba(138,150,179,.9);
+    --t-stat-bg: rgba(255,255,255,.04); --t-stat-border: rgba(255,255,255,.07);
+    --t-label: #ff9a5c; --t-hot: #ff7a3d;
+    --t-line: linear-gradient(90deg, #ff5a2b, #ff9a5c, #ffc857, #ff9a5c, #ff5a2b);
+    --t-fill: linear-gradient(90deg, #ff7a3d, #ffc857);
+    --t-fill-glow: 0 0 8px rgba(255,140,60,.55);
+    --t-glow: radial-gradient(circle, rgba(255,122,61,.18) 0%, transparent 70%);
+    --t-num-font: 'Bebas Neue', sans-serif; --t-num-weight: 400;
+    --t-num-shadow: 0 0 30px rgba(255,140,60,.5);
+    --t-bar-bg: rgba(255,255,255,.08);
+    --p-label: #6aa8ff; --p-accent: #6aa8ff;
+    --p-line: linear-gradient(90deg, #3d7bff, #6aa8ff, #9cc6ff, #6aa8ff, #3d7bff);
+    --p-fill: linear-gradient(90deg, #3d7bff, #6aa8ff);
+    --p-fill-glow: 0 0 8px rgba(80,150,255,.5);
+    --p-num-shadow: 0 0 20px rgba(106,168,255,.35);
+  }
+  body[data-theme="neon"] {
+    --t-bg: #0d0b16;
+    --t-border: 2px solid #ff3ea5;
+    --t-shadow: 0 0 28px rgba(255,62,165,.45), 0 20px 60px rgba(0,0,0,.8);
+    --t-radius: 16px;
+    --t-text: #ffffff; --t-sub: rgba(243,240,255,.8); --t-muted: rgba(161,151,196,.95);
+    --t-stat-bg: rgba(255,62,165,.06); --t-stat-border: rgba(255,62,165,.22);
+    --t-label: #2ee6ff; --t-hot: #ff3ea5;
+    --t-line: linear-gradient(90deg, #ff3ea5, #2ee6ff, #ff3ea5, #2ee6ff, #ff3ea5);
+    --t-fill: linear-gradient(90deg, #ff3ea5, #2ee6ff);
+    --t-fill-glow: 0 0 10px rgba(46,230,255,.7);
+    --t-glow: radial-gradient(circle, rgba(46,230,255,.18) 0%, transparent 70%);
+    --t-num-font: 'Bebas Neue', sans-serif; --t-num-weight: 400;
+    --t-num-shadow: 0 0 18px rgba(255,62,165,.85), 0 0 2px #fff;
+    --t-bar-bg: rgba(255,255,255,.08);
+    --p-label: #2ee6ff; --p-accent: #2ee6ff;
+    --p-line: linear-gradient(90deg, #2ee6ff, #8c7dff, #2ee6ff, #8c7dff, #2ee6ff);
+    --p-fill: linear-gradient(90deg, #8c7dff, #2ee6ff);
+    --p-fill-glow: 0 0 10px rgba(46,230,255,.7);
+    --p-num-shadow: 0 0 16px rgba(46,230,255,.75);
+  }
+  body[data-theme="minimal"] {
+    --t-bg: #fafafa;
+    --t-border: 1px solid #e4e4e7;
+    --t-shadow: 0 18px 48px rgba(0,0,0,.35);
+    --t-radius: 14px;
+    --t-text: #18181b; --t-sub: #3f3f46; --t-muted: #71717a;
+    --t-stat-bg: #f1f1f3; --t-stat-border: #e4e4e7;
+    --t-label: #ff3b30; --t-hot: #ff3b30;
+    --t-line: linear-gradient(90deg, #ff3b30, #ff3b30);
+    --t-fill: linear-gradient(90deg, #ff3b30, #ff3b30);
+    --t-fill-glow: none;
+    --t-glow: none;
+    --t-num-font: 'Noto Sans JP', sans-serif; --t-num-weight: 900;
+    --t-num-shadow: none;
+    --t-bar-bg: #e4e4e7;
+    --p-label: #18181b; --p-accent: #3f3f46;
+    --p-line: linear-gradient(90deg, #18181b, #18181b);
+    --p-fill: linear-gradient(90deg, #3f3f46, #18181b);
+    --p-fill-glow: none;
+    --p-num-shadow: none;
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
@@ -17,7 +82,7 @@
     height: 100vh;
   }
 
-  /* ===== TOAST ===== */
+  /* ===== 実績トースト ===== */
   #toast {
     position: fixed;
     bottom: 40px;
@@ -28,7 +93,6 @@
     z-index: 9999;
     pointer-events: none;
   }
-
   #toast.show { transform: translateX(0); }
   #toast.hide {
     transform: translateX(460px);
@@ -36,83 +100,67 @@
   }
 
   .toast-inner {
-    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 16px;
+    background: var(--t-bg);
+    border: var(--t-border);
+    border-radius: var(--t-radius);
     padding: 18px 22px 16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,200,0,0.15), inset 0 1px 0 rgba(255,255,255,0.08);
+    box-shadow: var(--t-shadow);
     position: relative;
     overflow: hidden;
   }
-
   .toast-inner::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #ff0000, #ff6b00, #ffd700, #ff6b00, #ff0000);
+    background: var(--t-line);
     background-size: 200% 100%;
     animation: shimmer 2s linear infinite;
   }
-
   @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
   .toast-glow {
     position: absolute;
     top: -50px; right: -50px;
     width: 150px; height: 150px;
-    background: radial-gradient(circle, rgba(255,100,0,0.15) 0%, transparent 70%);
+    background: var(--t-glow);
     animation: pulseGlow 2s ease-in-out infinite alternate;
   }
   @keyframes pulseGlow { from { opacity: 0.5; transform: scale(0.9); } to { opacity: 1; transform: scale(1.1); } }
 
-  .toast-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-
+  .toast-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
   .trophy-icon { font-size: 22px; animation: trophyBounce 0.6s ease-in-out 0.2s both; }
   @keyframes trophyBounce {
     0%, 100% { transform: scale(1) rotate(0deg); }
     30% { transform: scale(1.4) rotate(-10deg); }
     60% { transform: scale(1.2) rotate(5deg); }
   }
-
   .achievement-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: #ffd700;
+    font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--t-label);
   }
 
   .milestone-number {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 52px;
+    font-family: var(--t-num-font);
+    font-weight: var(--t-num-weight);
+    font-size: 54px;
     line-height: 1;
-    color: #ffffff;
-    text-shadow: 0 0 30px rgba(255,150,0,0.6);
+    color: var(--t-text);
+    text-shadow: var(--t-num-shadow);
     letter-spacing: 2px;
+    font-variant-numeric: tabular-nums;
     animation: countUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
   }
+  body[data-theme="minimal"] .milestone-number { font-size: 46px; letter-spacing: 0; }
   @keyframes countUp { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-  .milestone-title {
-    font-size: 13px;
-    color: rgba(255,255,255,0.85);
-    font-weight: 700;
-    margin-top: 2px;
-    margin-bottom: 12px;
-  }
+  .milestone-title { font-size: 13px; color: var(--t-sub); font-weight: 700; margin-top: 4px; margin-bottom: 12px; }
 
   .stats-row { display: flex; gap: 8px; margin-top: 4px; }
-
   .stat-card {
     flex: 1;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--t-stat-bg);
+    border: 1px solid var(--t-stat-border);
     border-radius: 10px;
     padding: 8px 10px;
     text-align: center;
@@ -123,29 +171,25 @@
   .stat-card:nth-child(3) { animation-delay: 0.55s; }
   @keyframes fadeSlideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-  .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: #fff; line-height: 1; }
-  .stat-value.hot { color: #ff6b35; text-shadow: 0 0 10px rgba(255,100,0,0.5); }
-  .stat-label { font-size: 9px; color: rgba(255,255,255,0.45); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; }
+  .stat-value { font-family: var(--t-num-font); font-weight: var(--t-num-weight); font-size: 22px; color: var(--t-text); line-height: 1; }
+  body[data-theme="minimal"] .stat-value { font-size: 17px; }
+  .stat-value.hot { color: var(--t-hot); }
+  .stat-label { font-size: 9px; color: var(--t-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
 
-  .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; border-radius: 16px; }
-  .particle {
-    position: absolute;
-    width: 4px; height: 4px;
-    border-radius: 50%;
-    animation: particleFly 1.2s ease-out both;
-  }
+  .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; border-radius: var(--t-radius); }
+  .particle { position: absolute; width: 4px; height: 4px; border-radius: 50%; animation: particleFly 1.2s ease-out both; }
   @keyframes particleFly { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
 
-  .progress-section { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); }
-  .progress-label { display: flex; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,0.4); margin-bottom: 5px; }
-  .progress-bar-bg { background: rgba(255,255,255,0.08); border-radius: 4px; height: 4px; overflow: hidden; }
+  .progress-section { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--t-stat-border); }
+  .progress-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--t-muted); margin-bottom: 5px; }
+  .progress-bar-bg { background: var(--t-bar-bg); border-radius: 4px; height: 4px; overflow: hidden; }
   .progress-bar-fill {
     height: 100%;
     border-radius: 4px;
-    background: linear-gradient(90deg, #ff6b00, #ffd700);
+    background: var(--t-fill);
     width: 0%;
     transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 0 8px rgba(255,150,0,0.6);
+    box-shadow: var(--t-fill-glow);
   }
 
   /* ===== 進捗トースト ===== */
@@ -159,78 +203,56 @@
     z-index: 9998; /* 実績トーストより下 */
     pointer-events: none;
   }
-
   #progress-toast.show { transform: translateX(0); }
   #progress-toast.hide {
     transform: translateX(460px);
     transition: transform 0.5s cubic-bezier(0.55, 0, 1, 0.45);
   }
-
   /* 実績トーストが表示中は進捗トーストを少し上にずらす */
   #toast.show ~ #progress-toast.show,
-  body.milestone-showing #progress-toast.show {
-    bottom: 280px;
-  }
+  body.milestone-showing #progress-toast.show { bottom: 280px; }
 
   .progress-toast-inner {
-    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 16px;
+    background: var(--t-bg);
+    border: var(--t-border);
+    border-radius: var(--t-radius);
     padding: 16px 20px 14px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(100,180,255,0.1), inset 0 1px 0 rgba(255,255,255,0.08);
+    box-shadow: var(--t-shadow);
     position: relative;
     overflow: hidden;
   }
-
-  /* 青系のシマーライン（実績トーストと区別） */
+  body[data-theme="neon"] .progress-toast-inner { border-color: #2ee6ff; box-shadow: 0 0 26px rgba(46,230,255,.4), 0 20px 60px rgba(0,0,0,.8); }
   .progress-toast-inner::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #0066ff, #00ccff, #0099ff, #00ccff, #0066ff);
+    background: var(--p-line);
     background-size: 200% 100%;
     animation: shimmer 2.5s linear infinite;
   }
-
-  .progress-toast-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-
-  .progress-label-text {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: #64b4ff;
-  }
-
+  .progress-toast-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .progress-icon { font-size: 18px; }
+  .progress-label-text { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--p-label); }
   .progress-count {
-    font-family: 'Bebas Neue', sans-serif;
+    font-family: var(--t-num-font);
+    font-weight: var(--t-num-weight);
     font-size: 46px;
     line-height: 1;
-    color: #ffffff;
-    text-shadow: 0 0 20px rgba(100,180,255,0.4);
+    color: var(--t-text);
+    text-shadow: var(--p-num-shadow);
     letter-spacing: 2px;
+    font-variant-numeric: tabular-nums;
     animation: countUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
   }
-
-  .progress-sub {
-    font-size: 12px;
-    color: rgba(255,255,255,0.5);
-    margin-top: 2px;
-    margin-bottom: 10px;
-  }
-
+  body[data-theme="minimal"] .progress-count { font-size: 40px; letter-spacing: 0; }
+  .progress-sub { font-size: 12px; color: var(--t-muted); margin-top: 4px; margin-bottom: 10px; }
+  .progress-sub strong { color: var(--t-text); }
   .progress-stats-row { display: flex; gap: 8px; margin-bottom: 12px; }
-
   .progress-stat {
     flex: 1;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.07);
+    background: var(--t-stat-bg);
+    border: 1px solid var(--t-stat-border);
     border-radius: 10px;
     padding: 7px 8px;
     text-align: center;
@@ -239,52 +261,21 @@
   .progress-stat:nth-child(1) { animation-delay: 0.25s; }
   .progress-stat:nth-child(2) { animation-delay: 0.35s; }
   .progress-stat:nth-child(3) { animation-delay: 0.45s; }
-
-  .progress-stat-value {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 20px;
-    color: #fff;
-    line-height: 1;
-  }
-  .progress-stat-value.accent { color: #64b4ff; }
-  .progress-stat-label {
-    font-size: 9px;
-    color: rgba(255,255,255,0.35);
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-top: 3px;
-  }
-
-  .progress-bar-section {}
-  .progress-bar-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    color: rgba(255,255,255,0.35);
-    margin-bottom: 5px;
-  }
-  .progress-bar-bg2 {
-    background: rgba(255,255,255,0.08);
-    border-radius: 4px;
-    height: 6px;
-    overflow: hidden;
-  }
+  .progress-stat-value { font-family: var(--t-num-font); font-weight: var(--t-num-weight); font-size: 20px; color: var(--t-text); line-height: 1; }
+  body[data-theme="minimal"] .progress-stat-value { font-size: 16px; }
+  .progress-stat-value.accent { color: var(--p-accent); }
+  .progress-stat-label { font-size: 9px; color: var(--t-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+  .progress-bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--t-muted); margin-bottom: 5px; }
+  .progress-bar-bg2 { background: var(--t-bar-bg); border-radius: 4px; height: 6px; overflow: hidden; }
   .progress-bar-fill2 {
     height: 100%;
     border-radius: 4px;
-    background: linear-gradient(90deg, #0066ff, #00ccff);
+    background: var(--p-fill);
     width: 0%;
     transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 0 8px rgba(0,150,255,0.5);
+    box-shadow: var(--p-fill-glow);
   }
-  .progress-pct {
-    text-align: right;
-    font-size: 10px;
-    color: #64b4ff;
-    margin-top: 4px;
-    font-family: 'Bebas Neue', sans-serif;
-    letter-spacing: 1px;
-  }
+  .progress-pct { text-align: right; font-size: 11px; color: var(--p-accent); margin-top: 4px; font-family: var(--t-num-font); font-weight: var(--t-num-weight); letter-spacing: 1px; }
 
   /* ===== 接続インジケーター (OBSプレビュー用) ===== */
   #ws-indicator {
@@ -296,17 +287,19 @@
     gap: 6px;
     font-family: monospace;
     font-size: 10px;
-    color: rgba(255,255,255,0.3);
-    background: rgba(0,0,0,0.4);
+    color: rgba(255,255,255,0.45);
+    background: rgba(0,0,0,0.45);
     padding: 4px 10px;
     border-radius: 20px;
+    transition: opacity 1s;
   }
+  #ws-indicator.fade-out { opacity: 0; }
   #ws-dot { width: 6px; height: 6px; border-radius: 50%; background: #444; }
   #ws-dot.on { background: #00e676; box-shadow: 0 0 6px #00e676; }
   #ws-dot.off { background: #ff1744; animation: blink 1s infinite; }
   @keyframes blink { 50% { opacity: 0.3; } }
 
-  /* ① キャッシュ未更新警告 */
+  /* キャッシュ未更新警告（テーマに関係なく赤で目立たせる） */
   #cache-warning {
     position: fixed; inset: 0;
     background: rgba(180, 0, 0, 0.55);
@@ -325,13 +318,9 @@
   }
   #cache-warning-sub { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 10px; letter-spacing: 1px; }
   @keyframes pulse-warn { 50% { opacity: 0.7; } }
-
-  /* ② LIVE バッジのフェードアウト */
-  #ws-indicator { transition: opacity 1s; }
-  #ws-indicator.fade-out { opacity: 0; }
 </style>
 </head>
-<body>
+<body data-theme="studio">
 
 <!-- ① キャッシュ未更新警告オーバーレイ -->
 <div id="cache-warning">
@@ -386,7 +375,7 @@
 <div id="progress-toast">
   <div class="progress-toast-inner">
     <div class="progress-toast-header">
-      <span style="font-size:18px;">📊</span>
+      <span class="progress-icon">📊</span>
       <span class="progress-label-text">Reaction Progress</span>
     </div>
 
@@ -504,6 +493,16 @@ const MILESTONES = [100, 500, 1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000,
 const ICONS = { 100:'🌱', 500:'⭐', 1000:'🏆', 2000:'💫', 3000:'🔥', 5000:'👑', 7500:'💎', 10000:'🚀', 20000:'🌟', 50000:'🎆' };
 const DISPLAY_DURATION = 7000;
 
+// テーマごとの紙吹雪の色
+const PARTICLE_COLORS = {
+  studio : ['#ffc857', '#ff7a3d', '#ff5a2b', '#ffffff', '#ff9a5c'],
+  neon   : ['#ff3ea5', '#2ee6ff', '#8c7dff', '#ffffff', '#ff7cc4'],
+  minimal: ['#ff3b30', '#18181b', '#a1a1aa', '#ff3b30', '#52525b'],
+};
+function applyTheme(theme) {
+  if (PARTICLE_COLORS[theme]) document.body.dataset.theme = theme;
+}
+
 let toastQueue = [];
 let isShowing = false;
 let toastTimer = null;
@@ -543,6 +542,9 @@ function connect() {
     }
     if (msg.type === 'progress') {
       showProgressToast(msg);
+    }
+    if (msg.type === 'theme_update') {
+      applyTheme(msg.theme);
     }
     if (msg.type === 'reset') {
       toastQueue = [];
@@ -646,7 +648,7 @@ function formatElapsed(ms) {
 function spawnParticles() {
   const container = document.getElementById('particles');
   container.innerHTML = '';
-  const colors = ['#ffd700', '#ff6b00', '#ff4444', '#ffffff', '#ffaa00'];
+  const colors = PARTICLE_COLORS[document.body.dataset.theme] || PARTICLE_COLORS.studio;
   for (let i = 0; i < 20; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
@@ -665,7 +667,9 @@ function showProgressToast(data) {
   // 実績トーストが表示中は少し上にずらす
   const pt = document.getElementById('progress-toast');
   if (isShowing) {
-    pt.style.bottom = '280px';
+    // テーマで高さが変わるので、実績トーストの実際の高さ＋すき間の分だけ上げる
+    const h = document.getElementById('toast').offsetHeight || 240;
+    pt.style.bottom = (40 + h + 14) + 'px';
   } else {
     pt.style.bottom = '40px';
   }
@@ -675,7 +679,7 @@ function showProgressToast(data) {
   document.getElementById('prog-remaining').textContent =
     nextM ? `あと ${remaining.toLocaleString()}` : 'MAX達成！🎆';
   document.getElementById('prog-sub').innerHTML =
-    nextM ? `次の目標まで <strong id="prog-remaining" style="color:#fff">あと ${remaining.toLocaleString()}</strong>` : '🎆 全マイルストーン達成！';
+    nextM ? `次の目標まで <strong id="prog-remaining">あと ${remaining.toLocaleString()}</strong>` : '🎆 全マイルストーン達成！';
 
   document.getElementById('prog-speed').textContent =
     speed >= 10000 ? `${(speed/1000).toFixed(1)}k` : speed.toLocaleString();

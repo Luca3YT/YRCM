@@ -1,182 +1,321 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-theme="studio">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' blob: ws://localhost:* http://localhost:* https://fonts.googleapis.com https://fonts.gstatic.com https://i.ytimg.com">
 <title>ReactionMilestone</title>
+<script id="theme-boot">
+// 描画前にテーマを当てる（読み込み直後に一瞬別の色が出ないように）
+try{const t=localStorage.getItem('theme');if(['studio','neon','minimal'].includes(t))document.documentElement.dataset.theme=t;}catch(e){}
+</script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Bebas+Neue&display=swap');
-:root{--bg:#0d0d14;--card:#16161f;--card2:#1c1c28;--border:rgba(255,255,255,.07);--accent:#ff4d00;--gold:#ffd700;--green:#00e676;--red:#ff1744;--text:rgba(255,255,255,.85);--sub:rgba(255,255,255,.35)}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ══ テーマ（色はすべてここで決める） ══ */
+:root,[data-theme="studio"]{
+  --bg:#0b1020;--surface:#0a0f1d;--card:#121a2e;--card2:#18223b;--field:#0e1527;
+  --border:#1f2a44;--border-strong:#2d3b5e;
+  --text:#e8ecf6;--sub:#8a96b3;--muted:#56617f;
+  --accent:#ff7a3d;--accent-hover:#ff935f;--on-accent:#fff;
+  --success:#3ddc97;--danger:#ff5470;--warning:#ffc857;--info:#6aa8ff;--discord:#7f8cff;
+  --num-font:'Bebas Neue',sans-serif;--num-shadow:0 0 28px color-mix(in srgb,var(--accent) 22%,transparent);
+  --card-hover:var(--border-strong);
+}
+[data-theme="neon"]{
+  --bg:#07060c;--surface:#09080f;--card:#110d1d;--card2:#181227;--field:#0c0916;
+  --border:#2a1f3d;--border-strong:#4a2f6a;
+  --text:#f3f0ff;--sub:#a197c4;--muted:#5e557a;
+  --accent:#ff3ea5;--accent-hover:#ff6cbb;--on-accent:#fff;
+  --success:#2ee6ff;--danger:#ff4d6d;--warning:#ffd23f;--info:#2ee6ff;--discord:#8c7dff;
+  --num-font:'Bebas Neue',sans-serif;--num-shadow:0 0 22px color-mix(in srgb,var(--accent) 55%,transparent);
+  --card-hover:color-mix(in srgb,var(--accent) 55%,var(--border));
+}
+[data-theme="minimal"]{
+  --bg:#18181b;--surface:#141417;--card:#222226;--card2:#2b2b30;--field:#1c1c20;
+  --border:#2c2c31;--border-strong:#3f3f46;
+  --text:#fafafa;--sub:#a1a1aa;--muted:#6b6b74;
+  --accent:#ff3b30;--accent-hover:#ff5c53;--on-accent:#fff;
+  --success:#4ade80;--danger:#ff453a;--warning:#facc15;--info:#60a5fa;--discord:#8b9bff;
+  --num-font:'Noto Sans JP',sans-serif;--num-shadow:none;
+  --card-hover:var(--border-strong);
+}
+/* 色の濃さ違いは color-mix で作る（テーマごとに個別指定しなくて済むように） */
+:root{
+  --accent-soft:color-mix(in srgb,var(--accent) 14%,transparent);
+  --accent-line:color-mix(in srgb,var(--accent) 38%,transparent);
+  --success-soft:color-mix(in srgb,var(--success) 13%,transparent);
+  --success-line:color-mix(in srgb,var(--success) 35%,transparent);
+  --danger-soft:color-mix(in srgb,var(--danger) 13%,transparent);
+  --danger-line:color-mix(in srgb,var(--danger) 35%,transparent);
+  --warning-soft:color-mix(in srgb,var(--warning) 13%,transparent);
+  --warning-line:color-mix(in srgb,var(--warning) 35%,transparent);
+  --info-soft:color-mix(in srgb,var(--info) 12%,transparent);
+  --info-line:color-mix(in srgb,var(--info) 32%,transparent);
+  --discord-soft:color-mix(in srgb,var(--discord) 14%,transparent);
+  --discord-line:color-mix(in srgb,var(--discord) 35%,transparent);
+  --hover:color-mix(in srgb,var(--text) 7%,transparent);
+  --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --shadow:0 18px 50px rgba(0,0,0,.55);
+}
+
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none}
-#titlebar{height:32px;background:#0a0a10;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;-webkit-app-region:drag;flex-shrink:0;gap:8px}
-.app-title{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,.4);flex:1}
-.win-btn{-webkit-app-region:no-drag;width:28px;height:22px;border:none;border-radius:4px;cursor:pointer;font-size:11px;background:transparent;color:rgba(255,255,255,.4);transition:background .15s,color .15s;display:flex;align-items:center;justify-content:center}
-.win-btn:hover{background:rgba(255,255,255,.08);color:#fff}
-.win-btn.close:hover{background:var(--red);color:#fff}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none;transition:background .25s,color .25s}
+::selection{background:var(--accent-soft)}
+*{scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
+
+/* ── タイトルバー ── */
+#titlebar{height:36px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 8px 0 14px;-webkit-app-region:drag;flex-shrink:0;gap:10px}
+.app-mark{width:9px;height:9px;border-radius:3px;background:var(--accent);box-shadow:0 0 10px var(--accent-line);flex-shrink:0}
+.app-title{font-size:12px;font-weight:700;letter-spacing:.5px;color:var(--text)}
+.app-title span{color:var(--sub);font-weight:400;margin-left:6px}
+.app-spacer{flex:1}
+#version-badge{-webkit-app-region:no-drag;font-family:var(--mono);font-size:10px;color:var(--sub);border:1px solid var(--border);border-radius:999px;padding:1px 8px}
+#version-badge:empty{display:none}
+.win-btn{-webkit-app-region:no-drag;width:30px;height:24px;border:none;border-radius:6px;cursor:pointer;font-size:11px;background:transparent;color:var(--sub);transition:background .15s,color .15s;display:flex;align-items:center;justify-content:center}
+.win-btn:hover{background:var(--hover);color:var(--text)}
+.win-btn.close:hover{background:var(--danger);color:#fff}
+
 /* ── 接続成功ポップアップ ── */
-#connect-popup{position:fixed;top:48px;left:50%;transform:translateX(-50%) translateY(-20px);width:420px;background:#16161f;border:1px solid rgba(0,230,118,.25);border-radius:16px;padding:16px 20px;box-shadow:0 20px 60px rgba(0,0,0,.8);opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;z-index:999}
+#connect-popup{position:fixed;top:52px;left:50%;transform:translateX(-50%) translateY(-16px);width:440px;background:var(--card2);border:1px solid var(--success-line);border-radius:16px;padding:14px 18px;box-shadow:var(--shadow);opacity:0;transition:opacity .35s,transform .35s;pointer-events:none;z-index:999}
 #connect-popup.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .cp-inner{display:flex;align-items:center;gap:12px}
-#cp-thumb{width:64px;height:36px;border-radius:6px;background:#222;object-fit:cover;flex-shrink:0}
-#cp-title{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#cp-channel{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px}
-.cp-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);border-radius:12px;padding:3px 10px;font-size:10px;font-weight:700;color:#00e676;margin-top:6px;letter-spacing:1px}
+#cp-thumb{width:68px;height:38px;border-radius:8px;background:var(--field);object-fit:cover;flex-shrink:0}
+#cp-title{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cp-channel{font-size:11px;color:var(--sub);margin-top:2px}
+#cp-viewers{font-size:11px;color:var(--sub);flex-shrink:0}
+.cp-badge{display:inline-flex;align-items:center;gap:6px;background:var(--danger-soft);border:1px solid var(--danger-line);border-radius:999px;padding:2px 10px;font-size:10px;font-weight:700;color:var(--danger);margin-top:6px;letter-spacing:1px}
 @keyframes blink{50%{opacity:.3}}
-/* アップデート後チェンジログポップアップ */
-#update-popup{position:fixed;top:48px;left:50%;transform:translateX(-50%) translateY(-20px);width:460px;background:#16161f;border:1px solid rgba(100,180,255,.25);border-radius:16px;padding:20px 22px;box-shadow:0 20px 60px rgba(0,0,0,.8);opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;z-index:998}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--danger);animation:blink 1.2s infinite}
+
+/* ── アップデート後ポップアップ ── */
+#update-popup{position:fixed;top:52px;left:50%;transform:translateX(-50%) translateY(-16px);width:470px;background:var(--card2);border:1px solid var(--info-line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);opacity:0;transition:opacity .35s,transform .35s;pointer-events:none;z-index:998}
 #update-popup.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
 .up-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.up-badge{background:rgba(100,180,255,.12);border:1px solid rgba(100,180,255,.3);border-radius:10px;padding:4px 12px;font-size:11px;font-weight:700;color:#64b4ff;letter-spacing:1px}
-.up-title{font-size:14px;font-weight:700;color:#fff}
-.up-notes{font-size:11px;color:rgba(255,255,255,.6);line-height:1.75;max-height:150px;overflow-y:auto;white-space:pre-wrap;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;margin-bottom:14px}
-.up-close{width:100%;padding:8px;background:rgba(100,180,255,.1);border:1px solid rgba(100,180,255,.25);border-radius:9px;color:#64b4ff;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s}
-.up-close:hover{background:rgba(100,180,255,.2)}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
-/* ── 上部固定バナー ── */
-#stream-banner{background:#12121c;border-bottom:1px solid var(--border);padding:7px 16px;display:none;align-items:center;gap:10px;flex-shrink:0}
+.up-badge{background:var(--info-soft);border:1px solid var(--info-line);border-radius:999px;padding:3px 12px;font-size:11px;font-weight:700;color:var(--info);letter-spacing:.5px}
+.up-title{font-size:14px;font-weight:700;color:var(--text)}
+.up-notes{font-size:12px;color:var(--sub);line-height:1.75;max-height:150px;overflow-y:auto;white-space:pre-wrap;margin-bottom:14px}
+.up-close{width:100%;padding:9px;background:var(--info-soft);border:1px solid var(--info-line);border-radius:10px;color:var(--info);font-size:12px;font-weight:700;cursor:pointer;transition:filter .15s;font-family:inherit}
+.up-close:hover{filter:brightness(1.2)}
+
+/* ── 上部バナー ── */
+#stream-banner{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 16px;display:none;align-items:center;gap:12px;flex-shrink:0}
 #stream-banner.visible{display:flex}
-/* 視聴者数クリックでグラフ展開 */
-#sb-viewers{cursor:pointer;transition:opacity .15s}
-#sb-viewers:hover{opacity:.75}
-/* グラフパネル */
-#viewers-graph-panel{background:#0e0e18;border-bottom:1px solid var(--border);overflow:hidden;max-height:0;transition:max-height .35s ease}
+#sb-thumb{width:46px;height:26px;border-radius:5px;background:var(--field);object-fit:cover;flex-shrink:0}
+#sb-title{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
+#sb-channel{font-size:10px;color:var(--sub);margin-top:1px}
+#sb-viewers{margin-left:auto;font-size:11px;font-weight:700;color:var(--success);display:flex;align-items:center;gap:6px;flex-shrink:0;cursor:pointer;background:var(--success-soft);border:1px solid var(--success-line);border-radius:999px;padding:3px 11px;transition:filter .15s}
+#sb-viewers:hover{filter:brightness(1.2)}
+#sb-viewers .live-dot{background:var(--success)}
+/* 視聴者数グラフ */
+#viewers-graph-panel{background:var(--surface);border-bottom:1px solid var(--border);overflow:hidden;max-height:0;transition:max-height .35s ease}
 #viewers-graph-panel.open{max-height:180px}
 #viewers-graph-wrap{padding:10px 16px 8px;height:160px;position:relative}
 #viewers-canvas{width:100%;height:100%;display:block}
-.graph-label{position:absolute;font-size:9px;color:rgba(255,255,255,.25);font-family:monospace}
-#graph-title{top:10px;left:16px;font-size:10px;color:rgba(255,255,255,.4)}
-#graph-close{top:10px;right:16px;font-size:10px;color:rgba(255,255,255,.3);cursor:pointer}
-#graph-close:hover{color:rgba(255,255,255,.6)}
-#sb-thumb{width:42px;height:24px;border-radius:3px;background:#222;object-fit:cover;flex-shrink:0}
-#sb-title{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
-#sb-channel{font-size:10px;color:var(--sub);margin-top:1px}
-#sb-viewers{margin-left:auto;font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px;flex-shrink:0}
+.graph-label{position:absolute;font-size:10px;color:var(--sub)}
+#graph-title{top:10px;left:16px;font-weight:700}
+#graph-close{top:10px;right:16px;cursor:pointer}
+#graph-close:hover{color:var(--text)}
+
+/* ── カードのレイアウト（固定2カラム。ここは触らない） ── */
 #content{flex:1;overflow:auto;padding:12px;display:grid;grid-template-columns:repeat(2,minmax(360px,1fr));gap:10px;align-content:start}
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;transition:opacity .2s,transform .2s;min-width:360px}
-.card.dragging{opacity:.4;transform:scale(.97)}
-.card.drag-over{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,77,0,.25)}
-.card-drag-handle{position:absolute;top:10px;right:10px;font-size:12px;color:rgba(255,255,255,.15);cursor:grab;user-select:none;padding:2px 4px;border-radius:4px;transition:color .15s}
-.card-drag-handle:hover{color:rgba(255,255,255,.4)}
-.card{position:relative}
+.card{position:relative;transition:opacity .2s,transform .2s,border-color .2s,background .25s}
+.card:hover{border-color:var(--card-hover)}
 .full-width{grid-column:1/-1}
-.card-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--sub);margin-bottom:10px}
+
+/* カード見出し */
+.card-title{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:12px;display:flex;align-items:center;gap:7px;letter-spacing:.3px}
+.card-title .ct-icon{font-size:13px;line-height:1}
+.card-title .ct-right{margin-left:auto;font-size:11px;font-weight:400;color:var(--muted);display:flex;align-items:center;gap:6px}
+.card-title.clickable{cursor:pointer}
+.card-title.clickable:hover .ct-right{color:var(--accent)}
+.log-box-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.log-box-title .card-title{margin-bottom:0}
+
+/* ── ボタン・入力 ── */
+.btn{border:1px solid transparent;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.3px;transition:background .15s,border-color .15s,color .15s,filter .15s,transform .1s;white-space:nowrap;user-select:none;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn-primary{background:var(--accent);color:var(--on-accent)}
+.btn-primary:hover:not(:disabled){background:var(--accent-hover)}
+.btn-ghost{background:var(--card2);border-color:var(--border);color:var(--sub)}
+.btn-ghost:hover:not(:disabled){border-color:var(--border-strong);color:var(--text)}
+.btn-danger{background:var(--danger-soft);border-color:var(--danger-line);color:var(--danger)}
+.btn-danger:hover:not(:disabled){filter:brightness(1.2)}
+.btn-accent-soft{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent)}
+.btn-accent-soft:hover:not(:disabled){filter:brightness(1.2)}
+.btn-discord{background:var(--discord-soft);border-color:var(--discord-line);color:var(--discord)}
+.btn-discord:hover:not(:disabled){filter:brightness(1.2)}
+.btn-sm{font-size:11px;padding:6px 12px}
+.btn-xs{font-size:10px;padding:3px 9px;border-radius:7px}
+.btn-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.field{background:var(--field);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:8px 12px;font-size:12px;outline:none;transition:border-color .15s,box-shadow .15s;user-select:text;font-family:inherit}
+.field:hover{border-color:var(--border-strong)}
+.field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.field::placeholder{color:var(--muted)}
+.field.mono{font-family:var(--mono);font-size:11px}
+select.field{cursor:pointer}
+select.field option{background:var(--card2);color:var(--text)}
+.field-label{font-size:11px;color:var(--sub);margin:2px 0 6px}
+.field-hint{font-size:10px;color:var(--muted);margin-top:5px;min-height:14px}
+
+/* ── 接続カード ── */
 .url-wrap{display:flex;gap:8px;position:relative}
-#live-url{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:9px;color:var(--text);padding:8px 12px;font-size:12px;font-family:monospace;outline:none;transition:border .2s;user-select:text}
-#live-url:focus{border-color:var(--accent)}
-#live-url::placeholder{color:rgba(255,255,255,.18)}
-#url-history{position:absolute;top:calc(100% + 4px);left:0;right:80px;background:var(--card2);border:1px solid rgba(255,255,255,.12);border-radius:10px;z-index:100;overflow:hidden;display:none;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+#live-url{flex:1;min-width:0}
+#url-history{position:absolute;top:calc(100% + 6px);left:0;right:80px;background:var(--card2);border:1px solid var(--border-strong);border-radius:12px;z-index:100;overflow:hidden;display:none;box-shadow:var(--shadow)}
 #url-history.show{display:block}
-.history-item{padding:8px 12px;font-size:11px;font-family:monospace;color:rgba(255,255,255,.6);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .1s}
-.history-item:hover{background:rgba(255,255,255,.07);color:#fff}
-.history-empty{padding:10px 12px;font-size:11px;color:var(--sub);text-align:center}
-.btn{border:none;border-radius:9px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:all .15s;white-space:nowrap;user-select:none}
-.btn:disabled{opacity:.4;cursor:default}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover:not(:disabled){background:#ff6b35}
-.btn-danger{background:rgba(255,23,68,.15);border:1px solid rgba(255,23,68,.3);color:var(--red)}
-.btn-danger:hover:not(:disabled){background:rgba(255,23,68,.28)}
-.btn-ghost{background:rgba(255,255,255,.05);border:1px solid var(--border);color:rgba(255,255,255,.6)}
-.btn-ghost:hover:not(:disabled){background:rgba(255,255,255,.1);color:#fff}
-#status-badge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;background:rgba(255,255,255,.04);border:1px solid var(--border);transition:all .3s}
-#status-badge.connected{background:rgba(0,230,118,.08);border-color:rgba(0,230,118,.25);color:var(--green)}
-#status-badge.connecting{background:rgba(255,200,0,.08);border-color:rgba(255,200,0,.25);color:#ffd700}
-#status-badge.error{background:rgba(255,23,68,.08);border-color:rgba(255,23,68,.25);color:var(--red)}
+.history-item{padding:9px 12px;font-size:11px;font-family:var(--mono);color:var(--sub);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .1s,color .1s}
+.history-item:hover{background:var(--hover);color:var(--text)}
+.history-empty{padding:10px 12px;font-size:11px;color:var(--muted);text-align:center}
+#status-badge{display:inline-flex;align-items:center;gap:7px;margin-top:10px;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.3px;background:var(--card2);border:1px solid var(--border);color:var(--sub);transition:all .3s}
+#status-badge.connected{background:var(--success-soft);border-color:var(--success-line);color:var(--success)}
+#status-badge.connecting{background:var(--warning-soft);border-color:var(--warning-line);color:var(--warning)}
+#status-badge.error{background:var(--danger-soft);border-color:var(--danger-line);color:var(--danger)}
 .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 .dot.blink{animation:blink 1s infinite}
-.btn-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.big-count{margin:4px 0 6px;font-family:'Bebas Neue',sans-serif;font-size:60px;line-height:1;color:#fff;text-shadow:0 0 30px rgba(255,150,0,.25);transition:color .2s}
-.big-count.bump{color:var(--gold)}
-.count-sub{font-size:11px;color:var(--sub);margin-top:4px;letter-spacing:1px}
-.obs-url-box{display:flex;align-items:center;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;padding:8px 12px;gap:8px;margin-top:4px;cursor:pointer;transition:background .15s}
-.obs-url-box:hover{background:rgba(255,255,255,.08)}
-.obs-url-text{flex:1;font-family:monospace;font-size:11px;color:rgba(255,255,255,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;user-select:text}
-.obs-hint{font-size:10px;color:var(--sub);margin-top:3px}
+
+/* ── リアクション数 ── */
+.big-count{margin:2px 0 4px;font-family:var(--num-font);font-weight:700;font-size:64px;line-height:1;color:var(--text);text-shadow:var(--num-shadow);transition:color .2s;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.big-count.bump{color:var(--accent)}
+.count-sub{font-size:11px;color:var(--sub);letter-spacing:.3px}
+
+/* ── OBS ── */
+.obs-url-box{display:flex;align-items:center;background:var(--field);border:1px solid var(--border);border-radius:10px;padding:9px 12px;gap:8px;cursor:pointer;transition:border-color .15s}
+.obs-url-box:hover{border-color:var(--accent)}
+.obs-url-text{flex:1;font-family:var(--mono);font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;user-select:text}
+.obs-url-text.copied{color:var(--success)}
+.obs-copy{font-size:11px;color:var(--muted)}
+.obs-hint{font-size:10px;color:var(--muted);margin-top:6px}
+
+/* ── テスト ── */
 .test-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.test-grid .btn{padding:7px 4px;font-size:11px}
-/* ログカードは通常カードと同じグリッドに入る */
-/* log-box は .card に統合 */
-.log-box-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--sub);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
-.log-scroll{font-family:monospace;font-size:11px;color:var(--sub);height:120px;min-height:60px;max-height:500px;overflow:auto;line-height:1.65;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;resize:vertical;width:100%;min-width:0;box-sizing:border-box;contain:strict}
-.log-scroll::-webkit-resizer{background:rgba(255,255,255,.08);border-radius:0 0 6px 0}
-.log-resize-hint{font-size:9px;color:rgba(255,255,255,.15);text-align:right;margin-top:2px;letter-spacing:.5px;user-select:none}
-.e-reaction{color:#ff9500}.e-milestone{color:var(--gold);font-weight:700}.e-error{color:var(--red)}.e-connected{color:var(--green)}.e-info{color:var(--sub)}
-.rxlog-entry{color:rgba(255,149,0,.8)}.rxlog-milestone{color:var(--gold);font-weight:700}
-/* サマリーモーダル */
-#summary-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;pointer-events:none;transition:opacity .3s}
-#summary-modal.show{opacity:1;pointer-events:auto}
-.summary-box{background:#16161f;border:1px solid rgba(255,215,0,.2);border-radius:20px;padding:28px 32px;width:520px;max-height:80vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.8)}
-.summary-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--gold);margin-bottom:4px}
-.summary-sub{font-size:11px;color:var(--sub);margin-bottom:20px}
-.summary-stat{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
-.summary-stat:last-of-type{border-bottom:none}
-.summary-stat-label{font-size:11px;color:var(--sub)}
-.summary-stat-value{font-size:16px;font-weight:700;color:#fff}
-.summary-milestones{margin:16px 0;padding:12px;background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.1);border-radius:10px;font-size:11px;color:rgba(255,255,255,.6);line-height:1.8}
-.summary-discord{margin-top:16px;background:rgba(88,101,242,.1);border:1px solid rgba(88,101,242,.25);border-radius:10px;padding:12px 14px;font-size:11px;font-family:monospace;color:rgba(255,255,255,.7);white-space:pre-wrap;line-height:1.7;max-height:180px;overflow-y:auto;cursor:pointer;transition:background .15s}
-.summary-discord:hover{background:rgba(88,101,242,.18)}
-.summary-btn-row{display:flex;gap:8px;margin-top:14px}
-/* コマンドリスト */
-/* 目標モーダル */
-#goal-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;pointer-events:none;transition:opacity .25s}
-#goal-modal.show{opacity:1;pointer-events:auto}
-.goal-modal-box{background:#16161f;border:1px solid rgba(255,214,0,.18);border-radius:18px;padding:24px 28px;width:400px;max-height:70vh;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.8)}
-.goal-modal-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
-.goal-modal-close{background:none;border:none;color:rgba(255,255,255,.3);font-size:18px;cursor:pointer;line-height:1;padding:0}
-.goal-modal-close:hover{color:#fff}
-.goal-modal-list{flex:1;overflow-y:auto;margin-bottom:14px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent}
-.goal-modal-item{display:flex;align-items:center;justify-content:space-between;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.05)}
-.goal-modal-item:last-child{border-bottom:none}
-.goal-modal-val{font-size:14px;font-weight:700;color:#fff}
-.goal-modal-add{display:flex;gap:8px}
-/* 音量スライダー */
-.volume-row{display:flex;align-items:center;gap:10px}
-input[type=range].volume-slider{flex:1;accent-color:#64b4ff;cursor:pointer;height:4px}
-.volume-val{font-size:11px;color:#fff;min-width:32px;text-align:right;font-family:monospace}
-#sound-select option{background:#1e1e2e;color:#fff}
-/* 目標カード */
-.goal-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);position:relative}
+.test-grid .btn{padding:7px 4px;font-size:11px;font-family:var(--mono);font-weight:500}
+
+/* ── ログ ── */
+.log-scroll{font-family:var(--mono);font-size:11px;color:var(--sub);height:120px;min-height:60px;max-height:500px;overflow:auto;line-height:1.7;resize:vertical;width:100%;min-width:0;box-sizing:border-box;contain:strict;background:var(--field);border:1px solid var(--border);border-radius:10px;padding:6px 10px}
+.log-scroll::-webkit-resizer{background:transparent}
+.log-resize-hint{font-size:9px;color:var(--muted);text-align:right;margin-top:3px;letter-spacing:.3px;user-select:none}
+.e-reaction{color:var(--accent)}.e-milestone{color:var(--warning);font-weight:500}.e-error{color:var(--danger)}.e-connected{color:var(--success)}.e-info{color:var(--sub)}
+.rxlog-entry{color:color-mix(in srgb,var(--accent) 85%,var(--text))}.rxlog-milestone{color:var(--warning);font-weight:500}
+
+/* ── 目標リスト ── */
+.goal-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);position:relative}
 .goal-item:last-of-type{border-bottom:none}
-.goal-status-badge{font-size:10px;font-weight:700;letter-spacing:1px;padding:2px 8px;border-radius:6px;flex-shrink:0;min-width:58px;text-align:center}
-.goal-status-badge.cleared{background:rgba(0,230,118,.12);color:#00e676;border:1px solid rgba(0,230,118,.25)}
-.goal-status-badge.active{background:rgba(255,214,0,.12);color:#ffd600;border:1px solid rgba(255,214,0,.25);animation:pulse-gold .8s infinite}
-.goal-status-badge.next{background:rgba(100,180,255,.08);color:#64b4ff;border:1px solid rgba(100,180,255,.18)}
-.goal-status-badge.upcoming{background:rgba(255,255,255,.04);color:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.08)}
-@keyframes pulse-gold{50%{opacity:.6}}
-.goal-value{font-size:15px;font-weight:700;color:#fff;min-width:60px}
-.goal-value.cleared{color:rgba(255,255,255,.35);text-decoration:line-through}
+.goal-status-badge{font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 8px;border-radius:999px;flex-shrink:0;min-width:62px;text-align:center;border:1px solid transparent}
+.goal-status-badge.cleared{background:var(--success-soft);color:var(--success);border-color:var(--success-line)}
+.goal-status-badge.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line);animation:pulse-badge 1.6s infinite}
+.goal-status-badge.next{background:var(--info-soft);color:var(--info);border-color:var(--info-line)}
+.goal-status-badge.upcoming{background:transparent;color:var(--muted);border-color:var(--border)}
+@keyframes pulse-badge{50%{opacity:.65}}
+.goal-value{font-size:15px;font-weight:700;color:var(--text);min-width:60px;font-variant-numeric:tabular-nums}
+.goal-value.cleared{color:var(--muted);text-decoration:line-through}
 .goal-progress-wrap{flex:1;min-width:0}
 .goal-progress-text{font-size:10px;color:var(--sub);margin-bottom:4px}
-.goal-progress-bar{height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
-.goal-progress-fill{height:100%;background:linear-gradient(90deg,#ffd600,#ff6d00);border-radius:2px;transition:width .5s}
-.goal-del-btn{background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:14px;padding:0 4px;line-height:1;flex-shrink:0;transition:color .15s}
-.goal-del-btn:hover{color:var(--red)}
-.goal-add-row{display:flex;gap:8px;margin-top:12px}
-.goal-add-input{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:#fff;font-size:12px;outline:none;transition:border .15s}
-.goal-add-input:focus{border-color:rgba(255,214,0,.4)}
-.goal-add-input::placeholder{color:rgba(255,255,255,.2)}
-.goal-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,230,118,.15);border:1px solid rgba(0,230,118,.35);border-radius:12px;padding:12px 24px;font-size:13px;font-weight:700;color:#00e676;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:1500;white-space:nowrap}
+.goal-progress-text .pct{color:var(--muted);font-size:9px}
+.goal-progress-bar{height:5px;background:var(--field);border-radius:3px;overflow:hidden}
+.goal-progress-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .5s}
+.goal-empty{font-size:11px;color:var(--muted);padding:6px 0}
+.goal-del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 4px;line-height:1;flex-shrink:0;transition:color .15s}
+.goal-del-btn:hover{color:var(--danger)}
+.goal-toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card2);border:1px solid var(--success-line);border-radius:999px;padding:11px 24px;font-size:13px;font-weight:700;color:var(--success);opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:1500;white-space:nowrap;box-shadow:var(--shadow)}
 .goal-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.cmd-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+
+/* ── コマンド一覧 ── */
+.cmd-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
 .cmd-row:last-child{border-bottom:none}
-.cmd-tags{display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0;min-width:160px}
-.cmd-tag{background:rgba(100,180,255,.1);border:1px solid rgba(100,180,255,.2);border-radius:6px;padding:2px 8px;font-size:10px;font-family:monospace;color:#64b4ff;white-space:nowrap}
-.cmd-desc{font-size:11px;color:rgba(255,255,255,.5);line-height:1.5;padding-top:2px}
-.card-toggle{cursor:pointer;user-select:none}
-.card-toggle-icon{font-size:10px;color:var(--sub);margin-left:6px;transition:transform .2s;display:inline-block}
+.cmd-tags{display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0;min-width:160px;max-width:180px}
+.cmd-tag{background:var(--info-soft);border:1px solid var(--info-line);border-radius:6px;padding:1px 7px;font-size:10px;font-family:var(--mono);color:var(--info);white-space:nowrap}
+.cmd-desc{font-size:11px;color:var(--sub);line-height:1.6;padding-top:1px}
+.cmd-note{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--muted)}
+.card-toggle-icon{font-size:9px;color:var(--muted);margin-left:auto;transition:transform .2s;display:inline-block}
 .card-toggle-icon.open{transform:rotate(180deg)}
 #cmd-body{overflow:hidden;transition:max-height .3s ease;max-height:0}
 #cmd-body.open{max-height:600px}
+
+/* ── サウンド ── */
+.volume-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+#mute-btn{flex-shrink:0;min-width:76px}
+#mute-btn.muted{color:var(--muted)}
+input[type=range].volume-slider{flex:1;accent-color:var(--accent);cursor:pointer;height:4px}
+.volume-val{font-size:11px;color:var(--text);min-width:36px;text-align:right;font-family:var(--mono)}
+#sound-select{width:100%;margin-bottom:8px;font-size:11px;padding:7px 10px}
+#custom-sound-row{display:none;margin-bottom:8px}
+.custom-sound-line{display:flex;gap:8px;align-items:center}
+#custom-sound-name{font-size:10px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── アップデート ── */
+.update-line{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}
+#update-status{font-size:12px;color:var(--sub)}
+#update-status.ok{color:var(--success)}
+#update-status strong.gold{color:var(--warning)}
+#update-status strong.green{color:var(--success)}
+#update-status .ver{color:var(--muted);font-size:10px;font-family:var(--mono)}
+#update-date{font-size:10px;color:var(--muted)}
+#changelog-area{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.changelog-label{font-size:10px;letter-spacing:.5px;color:var(--sub);margin-bottom:6px;font-weight:700}
+#changelog-text{font-size:11px;color:var(--sub);line-height:1.7;max-height:120px;overflow-y:auto;white-space:pre-wrap}
+
+/* ── 設定・テーマ切替 ── */
+.theme-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.theme-opt{background:var(--field);border:1px solid var(--border);border-radius:10px;padding:8px 8px 7px;cursor:pointer;text-align:left;color:var(--sub);font-family:inherit;font-size:11px;font-weight:700;transition:border-color .15s,color .15s}
+.theme-opt:hover{border-color:var(--border-strong);color:var(--text)}
+.theme-opt.active{border-color:var(--accent);color:var(--text);box-shadow:0 0 0 3px var(--accent-soft)}
+.theme-swatch{display:flex;gap:3px;margin-bottom:6px}
+.theme-swatch i{width:14px;height:14px;border-radius:4px;display:block;border:1px solid rgba(255,255,255,.08)}
+.theme-opt small{display:block;font-weight:400;font-size:9.5px;color:var(--muted);margin-top:1px}
+.webhook-row{display:flex;gap:6px;align-items:center}
+#webhook-url-input{flex:1;min-width:0}
+#webhook-status.ok{color:var(--success)}
+
+/* ── モーダル共通 ── */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;z-index:2000;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal.show{opacity:1;pointer-events:auto}
+.modal-box{background:var(--card);border:1px solid var(--border-strong);border-radius:18px;box-shadow:var(--shadow)}
+
+/* 目標モーダル */
+.goal-modal-box{padding:22px 24px;width:400px;max-height:70vh;display:flex;flex-direction:column}
+.goal-modal-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.goal-modal-close{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;line-height:1;padding:4px;border-radius:6px}
+.goal-modal-close:hover{color:var(--text);background:var(--hover)}
+.goal-modal-list{flex:1;overflow-y:auto;margin-bottom:14px}
+.goal-modal-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border)}
+.goal-modal-item:last-child{border-bottom:none}
+.goal-modal-val{font-size:14px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.goal-modal-val.cleared{text-decoration:line-through;color:var(--muted)}
+.goal-modal-clear{font-size:10px;color:var(--success);margin-left:auto}
+.goal-modal-add{display:flex;gap:8px}
+#goal-input{flex:1;min-width:0}
+
+/* サマリーモーダル */
+.summary-box{padding:26px 30px;width:520px;max-height:80vh;overflow-y:auto}
+.summary-title{font-family:var(--num-font);font-weight:700;font-size:28px;letter-spacing:2px;color:var(--accent);margin-bottom:2px}
+.summary-sub{font-size:11px;color:var(--sub);margin-bottom:18px}
+.summary-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.summary-stat{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.summary-stat-label{font-size:10px;color:var(--sub);display:block;margin-bottom:4px}
+.summary-stat-value{font-size:17px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.summary-milestones{margin:14px 0;padding:11px 13px;background:var(--warning-soft);border:1px solid var(--warning-line);border-radius:12px;font-size:11px;color:var(--text);line-height:1.8}
+.summary-discord-label{font-size:10px;color:var(--sub);margin:12px 0 5px}
+.summary-discord{background:var(--field);border:1px solid var(--discord-line);border-radius:12px;padding:12px 14px;font-size:11px;font-family:var(--mono);color:var(--sub);white-space:pre-wrap;line-height:1.7;max-height:180px;overflow-y:auto;cursor:pointer;transition:border-color .15s}
+.summary-discord:hover{border-color:var(--discord)}
+.summary-btn-row{display:flex;gap:8px;margin-top:14px}
+.summary-btn-row .btn{flex:1}
+
+/* フッター */
+#app-footer{text-align:center;padding:4px;font-size:10px;flex-shrink:0;background:transparent}
+#footer-ver{color:var(--muted);text-decoration:none;font-family:var(--mono)}
+#footer-ver:hover{color:var(--sub)}
 </style>
 </head>
 <body>
 <div id="titlebar">
-  <span style="font-size:14px;-webkit-app-region:no-drag">🎬</span>
-  <span class="app-title">REACTION MILESTONE</span>
-  <span id="version-badge" style="-webkit-app-region:no-drag;font-size:10px;color:rgba(255,255,255,.2);letter-spacing:1px;margin-right:4px"></span>
-  <button class="win-btn" onclick="window.electronAPI?.minimize()">─</button>
-  <button class="win-btn" onclick="window.electronAPI?.hide()">⊡</button>
-  <button class="win-btn close" onclick="window.electronAPI?.quit()">✕</button>
+  <div class="app-mark"></div>
+  <span class="app-title">YRCM<span>Reaction Milestone</span></span>
+  <span class="app-spacer"></span>
+  <span id="version-badge"></span>
+  <button class="win-btn" onclick="window.electronAPI?.minimize()" title="最小化">─</button>
+  <button class="win-btn" onclick="window.electronAPI?.hide()" title="トレイにしまう">⊡</button>
+  <button class="win-btn close" onclick="window.electronAPI?.quit()" title="終了">✕</button>
 </div>
 <!-- アップデート後チェンジログポップアップ -->
 <div id="update-popup">
@@ -188,14 +327,14 @@ input[type=range].volume-slider{flex:1;accent-color:#64b4ff;cursor:pointer;heigh
   <button class="up-close" onclick="closeUpdatePopup()">閉じる</button>
 </div>
 
-<!-- 上部固定バナー（2回目以降） -->
+<!-- 上部固定バナー -->
 <div id="stream-banner">
   <img id="sb-thumb" src="" alt="" onerror="this.style.display='none'" style="display:none">
   <div style="min-width:0;flex:1">
     <div id="sb-title">──</div>
     <div id="sb-channel">──</div>
   </div>
-  <div id="sb-viewers" onclick="toggleViewersGraph()" title="クリックしてグラフを表示"><div class="live-dot"></div><span id="sb-viewers-num">──</span></div>
+  <div id="sb-viewers" onclick="toggleViewersGraph()" title="クリックで同時接続数のグラフを表示"><div class="live-dot"></div><span id="sb-viewers-num">──</span></div>
 </div>
 
 <!-- 視聴者数グラフパネル（バナー直下） -->
@@ -207,82 +346,74 @@ input[type=range].volume-slider{flex:1;accent-color:#64b4ff;cursor:pointer;heigh
   </div>
 </div>
 
-<!-- 接続成功ポップアップ（初回のみ） -->
+<!-- 接続成功ポップアップ -->
 <div id="connect-popup">
   <div class="cp-inner">
     <img id="cp-thumb" src="" alt="" onerror="this.style.display='none'" style="display:none">
     <div style="min-width:0;flex:1">
       <div id="cp-title">──</div>
       <div id="cp-channel">──</div>
-      <div class="cp-badge"><div class="live-dot"></div>&nbsp;LIVE</div>
+      <div class="cp-badge"><div class="live-dot"></div>LIVE</div>
     </div>
-    <div style="font-size:11px;color:rgba(255,255,255,.35);flex-shrink:0" id="cp-viewers"></div>
+    <div id="cp-viewers"></div>
   </div>
 </div>
 <div id="content">
-  <div class="card" id="card-connect">    <div class="card-title">📡 YouTube Live 接続</div>
+  <div class="card" id="card-connect">
+    <div class="card-title"><span class="ct-icon">📡</span>YouTube Live 接続</div>
     <div class="url-wrap">
-      <input type="text" id="live-url" placeholder="https://www.youtube.com/watch?v=..."
+      <input type="text" id="live-url" class="field mono" placeholder="https://www.youtube.com/watch?v=..."
         onfocus="showHistory()" onblur="hideHistory()" onkeydown="onUrlKey(event)" oninput="onUrlInput()"/>
       <button class="btn btn-primary" id="connect-btn" onclick="connect()">接続</button>
       <div id="url-history"></div>
     </div>
     <div id="status-badge"><div class="dot"></div><span id="status-text">未接続</span></div>
     <div class="btn-row">
-      <button class="btn btn-danger"  onclick="disconnect()"      style="font-size:11px;padding:6px 12px;">切断</button>
-      <button class="btn btn-ghost"   onclick="refreshViewers()"  style="font-size:11px;padding:6px 12px;" id="refresh-viewers-btn" title="視聴者数を手動更新">👥 更新</button>
-      <button class="btn btn-danger"  onclick="endStream()"       style="font-size:11px;padding:6px 12px;background:rgba(255,100,0,.15);border-color:rgba(255,100,0,.3);color:#ff6400;" title="配信を終了してサマリーを表示">🎬 配信終了</button>
+      <button class="btn btn-danger btn-sm" onclick="disconnect()">切断</button>
+      <button class="btn btn-ghost btn-sm" onclick="refreshViewers()" id="refresh-viewers-btn" title="視聴者数を手動で更新">👥 更新</button>
+      <button class="btn btn-accent-soft btn-sm" onclick="endStream()" title="配信を終了してサマリーを表示">🎬 配信終了</button>
     </div>
   </div>
 
-  <div class="card" id="card-count">    <div class="card-title">📊 リアクション数</div>
+  <div class="card" id="card-count">
+    <div class="card-title"><span class="ct-icon">❤️</span>リアクション数</div>
     <div class="big-count" id="count-display">0</div>
     <div class="count-sub" id="count-sub">──</div>
     <div class="btn-row">
-      <button class="btn btn-danger" onclick="doReset()" style="font-size:11px;padding:6px 12px;">リセット</button>
+      <button class="btn btn-danger btn-sm" onclick="doReset()">リセット</button>
     </div>
   </div>
 
-  <div class="card" id="card-syslog">    <div class="log-box-title">
-      <span class="card-title" style="margin-bottom:0">📝 システムログ</span>
-      <button class="btn btn-ghost" style="font-size:10px;padding:2px 8px" onclick="clearLog('sys-log')">クリア</button>
+  <div class="card" id="card-syslog">
+    <div class="log-box-title">
+      <span class="card-title"><span class="ct-icon">📝</span>システムログ</span>
+      <button class="btn btn-ghost btn-xs" onclick="clearLog('sys-log')">クリア</button>
     </div>
     <div class="log-scroll" id="sys-log"></div>
-    <div class="log-resize-hint">↕ 右下角でサイズ変更</div>
+    <div class="log-resize-hint">↕ 右下の角でサイズ変更</div>
   </div>
 
-  <!-- リアクションログカード -->
-
-  <div class="card" id="card-rxlog">    <div class="log-box-title">
-      <span class="card-title" style="margin-bottom:0">✨ リアクションログ</span>
-      <button class="btn btn-ghost" style="font-size:10px;padding:2px 8px" onclick="clearLog('rx-log')">クリア</button>
+  <div class="card" id="card-rxlog">
+    <div class="log-box-title">
+      <span class="card-title"><span class="ct-icon">✨</span>リアクションログ</span>
+      <button class="btn btn-ghost btn-xs" onclick="clearLog('rx-log')">クリア</button>
     </div>
     <div class="log-scroll" id="rx-log"></div>
-    <div class="log-resize-hint">↕ 右下角でサイズ変更</div>
+    <div class="log-resize-hint">↕ 右下の角でサイズ変更</div>
   </div>
 
-  <div class="card" id="card-goals">    <div class="card-title" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="openGoalModal()">
-      🎯 目標リスト
-      <span style="font-size:10px;color:var(--sub);font-weight:400">⚙ 編集</span>
-    </div>
+  <div class="card" id="card-goals">
+    <div class="card-title clickable" onclick="openGoalModal()"><span class="ct-icon">🎯</span>目標リスト<span class="ct-right">⚙ 編集</span></div>
     <div id="goal-list"></div>
   </div>
 
-  <!-- サウンドカード -->
-
-  <div class="card" id="card-goals-r">    <div class="card-title" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="openGoalModal()">
-      🎯 目標リスト
-      <span style="font-size:10px;color:var(--sub);font-weight:400">⚙ 編集</span>
-    </div>
+  <div class="card" id="card-goals-r">
+    <div class="card-title clickable" onclick="openGoalModal()"><span class="ct-icon">🎯</span>目標リスト<span class="ct-right">⚙ 編集</span></div>
     <div id="goal-list-r"></div>
   </div>
 
-  <!-- サウンドカード -->
-
-  <div class="card" id="card-commands">    <div class="card-title card-toggle" onclick="toggleCmdList()" style="cursor:pointer;display:flex;align-items:center">
-      💬 配信コマンド一覧
-      <span class="card-toggle-icon" id="cmd-toggle-icon">▼</span>
-    </div>
+  <div class="card" id="card-commands">
+    <div class="card-title clickable" onclick="toggleCmdList()"><span class="ct-icon">💬</span>配信コマンド一覧<span class="card-toggle-icon" id="cmd-toggle-icon">▼</span></div>
     <div id="cmd-body">
       <div class="cmd-row">
         <div class="cmd-tags">
@@ -290,7 +421,7 @@ input[type=range].volume-slider{flex:1;accent-color:#64b4ff;cursor:pointer;heigh
           <span class="cmd-tag">!prog</span>
           <span class="cmd-tag">!p</span>
         </div>
-        <div class="cmd-desc">現在のリアクション数・進捗バー・次のマイルストーンまでの残り数・時速を表示します。</div>
+        <div class="cmd-desc">現在のリアクション数・進捗バー・次のマイルストーンまでの残り・時速を表示します。</div>
       </div>
       <div class="cmd-row">
         <div class="cmd-tags">
@@ -302,25 +433,18 @@ input[type=range].volume-slider{flex:1;accent-color:#64b4ff;cursor:pointer;heigh
         </div>
         <div class="cmd-desc">日本語コマンド。!progress と同じ動作をします。</div>
       </div>
-      <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.04);font-size:10px;color:rgba(255,255,255,.2)">
-        ※ コマンドはクールダウン10秒。全角・半角・大文字小文字は自動で統一されます。
-      </div>
+      <div class="cmd-note">※ クールダウン10秒。全角・半角、大文字・小文字は区別しません。</div>
     </div>
   </div>
 
-  <!-- 空スロット（自由配置用） -->
-  
-  
-
-  <!-- システムログカード -->
-
-  <div class="card" id="card-sound">    <div class="card-title">🔔 サウンド</div>
-    <div class="volume-row" style="margin-bottom:10px">
-      <button class="btn btn-ghost" id="mute-btn" onclick="toggleMute()" style="font-size:11px;padding:5px 12px;flex-shrink:0;min-width:72px">🔔 ON</button>
+  <div class="card" id="card-sound">
+    <div class="card-title"><span class="ct-icon">🔔</span>サウンド</div>
+    <div class="volume-row">
+      <button class="btn btn-ghost btn-sm" id="mute-btn" onclick="toggleMute()">🔔 ON</button>
       <input type="range" class="volume-slider" id="volume-slider" min="0" max="100" value="80" oninput="onVolumeChange(this.value)">
       <span class="volume-val" id="volume-val">80%</span>
     </div>
-    <select id="sound-select" onchange="onSoundChange(this.value)" style="width:100%;background:#1e1e2e;border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;outline:none;margin-bottom:8px;cursor:pointer">
+    <select id="sound-select" class="field" onchange="onSoundChange(this.value)">
       <option value="chime">🔔 チャイム（デフォルト）</option>
       <option value="fanfare">🎺 ファンファーレ</option>
       <option value="drumroll">🥁 ドラムロール</option>
@@ -328,19 +452,18 @@ input[type=range].volume-slider{flex:1;accent-color:#64b4ff;cursor:pointer;heigh
       <option value="pinpon">🎵 ピンポン</option>
       <option value="custom">📁 カスタム...</option>
     </select>
-    <div id="custom-sound-row" style="display:none;margin-bottom:8px">
+    <div id="custom-sound-row">
       <input type="file" id="custom-sound-file" accept=".mp3,.wav,.ogg,.m4a" onchange="onCustomSoundSelected(this)" style="display:none">
-      <div style="display:flex;gap:6px;align-items:center">
-        <button class="btn btn-ghost" onclick="document.getElementById('custom-sound-file').click()" style="font-size:10px;padding:5px 10px;flex-shrink:0">📂 選択</button>
-        <span id="custom-sound-name" style="font-size:10px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">未選択</span>
+      <div class="custom-sound-line">
+        <button class="btn btn-ghost btn-xs" onclick="document.getElementById('custom-sound-file').click()">📂 選択</button>
+        <span id="custom-sound-name">未選択</span>
       </div>
     </div>
-    <button class="btn btn-ghost" onclick="testSound()" style="font-size:11px;padding:6px 0;width:100%">▶ テスト再生</button>
+    <button class="btn btn-ghost btn-sm" onclick="testSound()" style="width:100%">▶ テスト再生</button>
   </div>
 
-  <!-- コマンドリスト -->
-
-  <div class="card" id="card-test">    <div class="card-title">🧪 テスト</div>
+  <div class="card" id="card-test">
+    <div class="card-title"><span class="ct-icon">🧪</span>テスト</div>
     <div class="test-grid">
       <button class="btn btn-ghost" onclick="addTest(1)">+1</button>
       <button class="btn btn-ghost" onclick="addTest(10)">+10</button>
@@ -352,43 +475,53 @@ input[type=range].volume-slider{flex:1;accent-color:#64b4ff;cursor:pointer;heigh
       <button class="btn btn-ghost" onclick="jumpTo(5000)">→5k</button>
     </div>
   </div>
-  <!-- 目標カード -->
 
-  <div class="card" id="update-card">    <div class="card-title">🔄 アップデート</div>
-    <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px">
-      <div id="update-status" style="font-size:12px;color:var(--sub)">最新版を確認中...</div>
-      <div id="update-date" style="font-size:10px;color:rgba(255,255,255,.2)"></div>
+  <div class="card" id="update-card">
+    <div class="card-title"><span class="ct-icon">🔄</span>アップデート</div>
+    <div class="update-line">
+      <div id="update-status">最新版を確認中...</div>
+      <div id="update-date"></div>
     </div>
-    <button class="btn btn-ghost" id="check-update-btn" onclick="checkUpdate()" style="font-size:11px;padding:6px 14px;">今すぐ確認</button>
-    <div id="changelog-area" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
-      <div style="font-size:10px;letter-spacing:1px;color:var(--sub);margin-bottom:6px">📋 更新内容</div>
-      <div id="changelog-text" style="font-size:11px;color:rgba(255,255,255,.6);line-height:1.7;max-height:120px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;white-space:pre-wrap"></div>
+    <button class="btn btn-ghost btn-sm" id="check-update-btn" onclick="checkUpdate()">今すぐ確認</button>
+    <div id="changelog-area">
+      <div class="changelog-label">📋 更新内容</div>
+      <div id="changelog-text"></div>
     </div>
   </div>
 
-  <div class="card" id="card-obs">    <div class="card-title">🖥 OBS ブラウザソース</div>
+  <div class="card" id="card-obs">
+    <div class="card-title"><span class="ct-icon">🖥</span>OBS ブラウザソース</div>
     <div class="obs-url-box" onclick="copyOverlay(this)">
       <span class="obs-url-text" id="overlay-url">http://localhost:3000/overlay.html</span>
-      <span style="font-size:11px;color:var(--sub)">📋</span>
+      <span class="obs-copy">📋 コピー</span>
     </div>
-    <div class="obs-hint">クリックでコピー｜推奨: 1920×1080 / 背景透過 ✓</div>
+    <div class="obs-hint">推奨: 1920×1080 / 背景は透過のまま</div>
   </div>
-  <!-- アップデートカード -->
 
-  <!-- 設定カード -->
   <div class="card" id="card-settings">
-    <div class="card-title">⚙ 設定</div>
-    <div style="font-size:10px;color:var(--sub);margin-bottom:4px;margin-top:4px">Discord WebHook URL</div>
-    <div style="display:flex;gap:6px;align-items:center">
-      <input type="text" id="webhook-url-input" placeholder="https://discord.com/api/webhooks/..."
-        style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:#fff;font-size:11px;outline:none;font-family:monospace"
-        oninput="onWebhookInput(this.value)">
-      <button class="btn btn-ghost" onclick="clearWebhook()" style="font-size:10px;padding:5px 10px;flex-shrink:0" title="クリア">✕</button>
+    <div class="card-title"><span class="ct-icon">⚙</span>設定</div>
+    <div class="field-label">テーマ（管理画面とオーバーレイの両方に反映）</div>
+    <div class="theme-picker" id="theme-picker">
+      <button class="theme-opt" data-theme-opt="studio" onclick="setTheme('studio')">
+        <span class="theme-swatch"><i style="background:#121a2e"></i><i style="background:#ff7a3d"></i><i style="background:#3ddc97"></i></span>スタジオ<small>濃紺＋オレンジ</small>
+      </button>
+      <button class="theme-opt" data-theme-opt="neon" onclick="setTheme('neon')">
+        <span class="theme-swatch"><i style="background:#110d1d"></i><i style="background:#ff3ea5"></i><i style="background:#2ee6ff"></i></span>ネオン<small>黒＋マゼンタ</small>
+      </button>
+      <button class="theme-opt" data-theme-opt="minimal" onclick="setTheme('minimal')">
+        <span class="theme-swatch"><i style="background:#222226"></i><i style="background:#ff3b30"></i><i style="background:#fafafa"></i></span>ミニマル<small>グレー＋レッド</small>
+      </button>
     </div>
-    <div id="webhook-status" style="font-size:10px;color:rgba(255,255,255,.2);margin-top:4px;height:14px"></div>
+    <div class="field-label">Discord WebHook URL</div>
+    <div class="webhook-row">
+      <input type="text" id="webhook-url-input" class="field mono" placeholder="https://discord.com/api/webhooks/..." oninput="onWebhookInput(this.value)">
+      <button class="btn btn-ghost btn-xs" onclick="clearWebhook()" title="クリア">✕</button>
+    </div>
+    <div class="field-hint" id="webhook-status"></div>
   </div>
 
-  <div class="card" id="card-test-r">    <div class="card-title">🧪 テスト</div>
+  <div class="card" id="card-test-r">
+    <div class="card-title"><span class="ct-icon">🧪</span>テスト</div>
     <div class="test-grid">
       <button class="btn btn-ghost" onclick="addTest(1)">+1</button>
       <button class="btn btn-ghost" onclick="addTest(10)">+10</button>
@@ -400,7 +533,6 @@ input[type=range].volume-slider{flex:1;accent-color:#64b4ff;cursor:pointer;heigh
       <button class="btn btn-ghost" onclick="jumpTo(5000)">→5k</button>
     </div>
   </div>
-  <!-- 目標カード -->
 
 </div>
 <script>
@@ -426,6 +558,7 @@ async function init(){
   loadGoals();
   loadVolume();
   loadWebhook();
+  loadTheme();
   setTimeout(initFooter, 800);
 }
 
@@ -433,17 +566,17 @@ async function handleUpdateStatus(data){
   const el=document.getElementById('update-status');
   const btn=document.getElementById('check-update-btn');
   if(data.status==='checking'){
-    el.textContent='確認中...';el.style.color='var(--sub)';
+    el.textContent='確認中...';el.className='';
   } else if(data.status==='available'){
-    el.innerHTML=`🆕 <strong style="color:var(--gold)">v${data.version} が利用可能</strong>`;
-    el.style.color='';
+    el.innerHTML=`🆕 <strong class="gold">v${data.version} が利用可能</strong>`;
+    el.className='';
     btn.textContent='ダウンロード中...';btn.disabled=true;
     showChangelog(data.notes);
     showUpdateDate(data.releaseDate);
     checkingUpdate=false;
     clearTimeout(checkUpdateTimer);
   } else if(data.status==='downloaded'){
-    el.innerHTML=`✅ <strong style="color:var(--green)">v${data.version} の準備完了</strong>`;
+    el.innerHTML=`✅ <strong class="green">v${data.version} の準備完了</strong>`;
     btn.textContent='今すぐ再起動して更新';
     btn.className='btn btn-primary';btn.disabled=false;
     btn.onclick=()=>{
@@ -454,13 +587,13 @@ async function handleUpdateStatus(data){
     showUpdateDate(data.releaseDate);
   } else if(data.status==='not-available'){
     const ver = isElectron ? (await electronAPI.getVersion().catch(()=>'')) : '';
-    el.innerHTML=`✅ 最新版です${ver?' <span style="color:rgba(255,255,255,.3);font-size:10px">v'+ver+'</span>':''}`;
-    el.style.color='var(--green)';
+    el.innerHTML=`✅ 最新版です${ver?' <span class="ver">v'+ver+'</span>':''}`;
+    el.className='ok';
     btn.textContent='今すぐ確認';btn.disabled=false;
     checkingUpdate=false;
     clearTimeout(checkUpdateTimer);
   } else if(data.status==='error'){
-    el.textContent='⚠️ 確認できませんでした';el.style.color='var(--sub)';
+    el.textContent='⚠️ 確認できませんでした';el.className='';
     btn.textContent='再試行';btn.disabled=false;
     checkingUpdate=false;
     clearTimeout(checkUpdateTimer);
@@ -512,7 +645,7 @@ function connectWs(){
       if(msg.connected)updateStatus('connected',msg.videoId,{quiet:true});
       updateStreamInfo(msg);
       // サーバーが再起動していてもサウンド設定（音源含む）が残るよう送り直す
-      _sentCustomSoundB64=null;_broadcastVolume();
+      _sentCustomSoundB64=null;_broadcastVolume();broadcastTheme();
     }
     if(msg.type==='update'){setCount(msg.count);if(msg.sessionStart)sessionStart=msg.sessionStart;}
     if(msg.type==='yt_status'){updateStatus(msg.status,msg.videoId);if(msg.count!==undefined)setCount(msg.count);updateStreamInfo(msg);}
@@ -665,8 +798,8 @@ function copyOverlay(box){
   const u=`http://${location.hostname}:3000/overlay.html`;
   if(isElectron)electronAPI.copyOverlayUrl();else navigator.clipboard.writeText(u).catch(()=>{});
   const hint=box.querySelector('.obs-url-text'),orig=hint.textContent;
-  hint.textContent='✓ コピーしました！';hint.style.color='var(--green)';
-  setTimeout(()=>{hint.textContent=orig;hint.style.color='';},1500);
+  hint.textContent='✓ コピーしました';hint.classList.add('copied');
+  setTimeout(()=>{hint.textContent=orig;hint.classList.remove('copied');},1500);
 }
 
 function sysLog(type,text){addLogEntry('sys-log','e-'+type,text);}
@@ -792,17 +925,15 @@ function renderGoalModal(){
   const list = document.getElementById('goal-modal-list');
   if(!list) return;
   if(goals.length === 0){
-    list.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,.25);padding:8px 0">目標がありません。</div>';
+    list.innerHTML = '<div class="goal-empty">目標がありません。下の欄から追加できます。</div>';
     return;
   }
   const count = lastCount;
   list.innerHTML = [...goals].sort((a,b)=>b.value-a.value).map(g=>{
     const cleared = count >= g.value;
-    const color = cleared ? 'rgba(0,230,118,.7)' : 'rgba(255,255,255,.8)';
-    const strike = cleared ? 'text-decoration:line-through;color:rgba(255,255,255,.3)' : '';
     return `<div class="goal-modal-item">
-      <span class="goal-modal-val" style="${strike}">${g.value.toLocaleString()}</span>
-      ${cleared ? '<span style="font-size:10px;color:#00e676">✓ クリア</span>' : ''}
+      <span class="goal-modal-val${cleared?' cleared':''}">${g.value.toLocaleString()}</span>
+      ${cleared ? '<span class="goal-modal-clear">✓ クリア</span>' : ''}
       <button class="goal-del-btn" onclick="removeGoal(${g.value})" title="削除">×</button>
     </div>`;
   }).join('');
@@ -816,7 +947,7 @@ function renderGoals(count){
   const list = document.getElementById(lid);
   if(!list) continue;
   if(goals.length === 0){
-    list.innerHTML = '<div style="font-size:11px;color:rgba(255,255,255,.2);padding:6px 0">目標未設定（タイトルをクリックして追加）</div>';
+    list.innerHTML = '<div class="goal-empty">目標未設定（タイトルをクリックして追加）</div>';
     continue; // return だと右列のカードが更新されず古い表示が残る
   }
   const sorted = [...goals].sort((a,b) => a.value - b.value); // 昇順
@@ -846,7 +977,7 @@ function renderGoals(count){
         <span class="goal-status-badge active">🔥 挑戦中</span>
         <span class="goal-value">${g.value.toLocaleString()}</span>
         <div class="goal-progress-wrap">
-          <div class="goal-progress-text">${count.toLocaleString()} / ${g.value.toLocaleString()} <span style="color:rgba(255,255,255,.2);font-size:9px">(${pct}%)</span></div>
+          <div class="goal-progress-text">${count.toLocaleString()} / ${g.value.toLocaleString()} <span class="pct">(${pct}%)</span></div>
           <div class="goal-progress-bar"><div class="goal-progress-fill" style="width:${pct}%"></div></div>
         </div>
       </div>`;
@@ -926,8 +1057,7 @@ function _applyVolumeUI(){
   if(valEl)   valEl.textContent = Math.round(soundVolume * 100) + '%';
   if(muteBtn){
     muteBtn.textContent = soundMuted ? '🔇 OFF' : '🔔 ON';
-    muteBtn.style.color = soundMuted ? 'var(--sub)' : '';
-    muteBtn.style.borderColor = soundMuted ? 'rgba(255,255,255,.1)' : '';
+    muteBtn.classList.toggle('muted', soundMuted);
   }
   _broadcastVolume();
 }
@@ -1260,6 +1390,12 @@ function toggleViewersGraph(){
   if(isOpen) drawViewersGraph();
 }
 
+// "#rrggbb" → rgba()（canvas のグラデーション用）
+function hexAlpha(hex,a){
+  const m=/^#?([0-9a-f]{6})$/i.exec(hex); if(!m) return hex;
+  const n=parseInt(m[1],16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;
+}
+
 function drawViewersGraph(){
   const canvas = document.getElementById('viewers-canvas');
   if(!canvas) return;
@@ -1269,9 +1405,13 @@ function drawViewersGraph(){
   canvas.style.marginTop = '18px';
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
+  // 線と文字の色はテーマから取る
+  const css = getComputedStyle(document.documentElement);
+  const cv = n => css.getPropertyValue(n).trim();
+  const lineColor = cv('--info') || '#6aa8ff', subColor = cv('--sub') || '#888', gridColor = cv('--border') || '#333';
   ctx.clearRect(0, 0, W, H);
   if(viewersHistory.length < 2){
-    ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.font = '11px monospace';
+    ctx.fillStyle = subColor; ctx.font = '11px monospace';
     ctx.textAlign = 'center'; ctx.fillText('データ収集中...', W/2, H/2); return;
   }
   const vals = viewersHistory.map(h => { const n = parseInt(String(h.v).replace(/[^0-9]/g,'')); return isNaN(n)?0:n; });
@@ -1281,21 +1421,21 @@ function drawViewersGraph(){
   const padL=4,padR=4,padT=4,padB=18,gW=W-padL-padR,gH=H-padT-padB;
   const toX = t => padL + ((t-minT)/timeRange)*gW;
   const toY = v => padT + (1-(v-minV)/range)*gH;
-  ctx.strokeStyle='rgba(255,255,255,.06)'; ctx.lineWidth=1;
+  ctx.strokeStyle=gridColor; ctx.lineWidth=1;
   for(let i=0;i<=2;i++){ const y=padT+(gH/2)*i; ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke(); }
   const grad=ctx.createLinearGradient(0,padT,0,H-padB);
-  grad.addColorStop(0,'rgba(100,180,255,.35)'); grad.addColorStop(1,'rgba(100,180,255,.02)');
+  grad.addColorStop(0,hexAlpha(lineColor,.35)); grad.addColorStop(1,hexAlpha(lineColor,.02));
   ctx.beginPath(); ctx.moveTo(toX(times[0]),H-padB);
   for(let i=0;i<vals.length;i++) ctx.lineTo(toX(times[i]),toY(vals[i]));
   ctx.lineTo(toX(times[times.length-1]),H-padB); ctx.closePath();
   ctx.fillStyle=grad; ctx.fill();
-  ctx.beginPath(); ctx.strokeStyle='rgba(100,200,255,.9)'; ctx.lineWidth=1.5; ctx.lineJoin='round';
+  ctx.beginPath(); ctx.strokeStyle=lineColor; ctx.lineWidth=1.5; ctx.lineJoin='round';
   for(let i=0;i<vals.length;i++) i===0?ctx.moveTo(toX(times[i]),toY(vals[i])):ctx.lineTo(toX(times[i]),toY(vals[i]));
   ctx.stroke();
   const lastVal = viewersHistory[viewersHistory.length-1].v;
-  ctx.fillStyle='rgba(100,200,255,.8)'; ctx.font='10px monospace'; ctx.textAlign='right';
+  ctx.fillStyle=lineColor; ctx.font='10px monospace'; ctx.textAlign='right';
   ctx.fillText(lastVal, W-padR, toY(vals[vals.length-1])-4);
-  ctx.fillStyle='rgba(255,255,255,.25)'; ctx.font='9px monospace'; ctx.textAlign='left';
+  ctx.fillStyle=subColor; ctx.font='9px monospace'; ctx.textAlign='left';
   ctx.fillText(maxV.toLocaleString(), padL, padT+10);
   ctx.fillText(minV.toLocaleString(), padL, H-padB-2);
 }
@@ -1398,10 +1538,10 @@ function updateWebhookStatus(){
   if(!el) return;
   if(discordWebhookUrl){
     el.textContent = '✅ 設定済み';
-    el.style.color = 'var(--green)';
+    el.className = 'field-hint ok';
   } else {
     el.textContent = '未設定';
-    el.style.color = 'rgba(255,255,255,.2)';
+    el.className = 'field-hint';
   }
 }
 
@@ -1437,6 +1577,37 @@ async function sendToDiscord(){
 }
 
 
+// ══════════════════════════════════
+// テーマ（管理画面とオーバーレイ共通）
+// ══════════════════════════════════
+const THEMES=['studio','neon','minimal'];
+let currentTheme='studio';
+
+function loadTheme(){
+  try{ const t=localStorage.getItem('theme'); if(THEMES.includes(t)) currentTheme=t; }catch(e){}
+  applyTheme();
+  broadcastTheme();
+}
+
+function setTheme(t){
+  if(!THEMES.includes(t)) return;
+  currentTheme=t;
+  try{ localStorage.setItem('theme',t); }catch(e){}
+  applyTheme();
+  broadcastTheme();
+}
+
+function applyTheme(){
+  document.documentElement.dataset.theme=currentTheme;
+  document.querySelectorAll('[data-theme-opt]').forEach(b=>b.classList.toggle('active',b.dataset.themeOpt===currentTheme));
+  const panel=document.getElementById('viewers-graph-panel');
+  if(panel&&panel.classList.contains('open')) drawViewersGraph();
+}
+
+// オーバーレイにも同じテーマを当てる（サーバーが覚えておき、overlay 接続時にも送る）
+function broadcastTheme(){
+  fetch('/api/theme',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({theme:currentTheme})}).catch(()=>{});
+}
 
 init();
 </script>
@@ -1444,42 +1615,43 @@ init();
 <!-- 目標クリアトースト -->
 <div class="goal-toast" id="goal-toast"></div>
 
-
 <!-- 目標設定モーダル -->
-<div id="goal-modal">
-  <div class="goal-modal-box">
+<div id="goal-modal" class="modal">
+  <div class="modal-box goal-modal-box">
     <div class="goal-modal-title">
       🎯 目標を設定
-      <button class="goal-modal-close" onclick="closeGoalModal()">✕</button>
+      <button class="goal-modal-close" onclick="closeGoalModal()" title="閉じる">✕</button>
     </div>
     <div class="goal-modal-list" id="goal-modal-list"></div>
     <div class="goal-modal-add">
-      <input class="goal-add-input" id="goal-input" type="number" min="1" placeholder="数値を入力（例: 500）" onkeydown="if(event.key==='Enter')addGoal()" style="flex:1">
-      <button class="btn btn-ghost" onclick="addGoal()" style="font-size:11px;padding:6px 14px;flex-shrink:0">＋ 追加</button>
+      <input class="field" id="goal-input" type="number" min="1" placeholder="数値を入力（例: 500）" onkeydown="if(event.key==='Enter')addGoal()">
+      <button class="btn btn-primary btn-sm" onclick="addGoal()">＋ 追加</button>
     </div>
   </div>
 </div>
 
 <!-- 配信サマリーモーダル -->
-<div id="summary-modal">
-  <div class="summary-box">
-    <div class="summary-title">📊 配信サマリー</div>
+<div id="summary-modal" class="modal">
+  <div class="modal-box summary-box">
+    <div class="summary-title">配信サマリー</div>
     <div class="summary-sub" id="summary-stream-title"></div>
-    <div class="summary-stat"><span class="summary-stat-label">総リアクション数</span><span class="summary-stat-value" id="sum-count">0</span></div>
-    <div class="summary-stat"><span class="summary-stat-label">配信時間</span><span class="summary-stat-value" id="sum-duration">──</span></div>
-    <div class="summary-stat"><span class="summary-stat-label">平均時速</span><span class="summary-stat-value" id="sum-speed">──</span></div>
+    <div class="summary-stats">
+      <div class="summary-stat"><span class="summary-stat-label">総リアクション数</span><span class="summary-stat-value" id="sum-count">0</span></div>
+      <div class="summary-stat"><span class="summary-stat-label">配信時間</span><span class="summary-stat-value" id="sum-duration">──</span></div>
+      <div class="summary-stat"><span class="summary-stat-label">平均時速</span><span class="summary-stat-value" id="sum-speed">──</span></div>
+    </div>
     <div class="summary-milestones" id="sum-milestones"></div>
-    <div style="font-size:10px;color:var(--sub);margin:12px 0 4px">📋 Discord用テキスト（クリックでコピー）</div>
+    <div class="summary-discord-label">📋 Discord用テキスト（クリックでコピー）</div>
     <div class="summary-discord" id="sum-discord" onclick="copyDiscord()"></div>
     <div class="summary-btn-row">
-      <button class="btn btn-primary" onclick="copyDiscord()" style="flex:1">📋 コピー</button>
-      <button class="btn btn-ghost" id="discord-send-btn" onclick="sendToDiscord()" style="flex:1;background:rgba(88,101,242,.15);border-color:rgba(88,101,242,.3);color:#7289da">🔔 Discordに送信</button>
-      <button class="btn btn-ghost" onclick="closeSummary()" style="flex:1">閉じる</button>
+      <button class="btn btn-primary" onclick="copyDiscord()">📋 コピー</button>
+      <button class="btn btn-discord" id="discord-send-btn" onclick="sendToDiscord()">🔔 Discordに送信</button>
+      <button class="btn btn-ghost" onclick="closeSummary()">閉じる</button>
     </div>
   </div>
 </div>
-<div id="app-footer" style="text-align:center;padding:4px;font-size:10px;color:rgba(255,255,255,.18);flex-shrink:0;background:transparent">
-  <a href="#" onclick="openReleasePage();return false;" style="color:rgba(255,255,255,.2);text-decoration:none" id="footer-ver">v--</a>
+<div id="app-footer">
+  <a href="#" onclick="openReleasePage();return false;" id="footer-ver">v--</a>
 </div>
 </body>
 </html>

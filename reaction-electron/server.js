@@ -75,6 +75,9 @@ const achievedMilestones = new Set();
 let viewersHistory     = []; // 視聴者数履歴（グラフ用）最大200件
 // 最後に受け取ったサウンド設定（overlayが後から接続・再接続したときに送り直す）
 let soundSettings      = null; // { volume, soundType, customSoundB64 }
+// 見た目のテーマ（管理画面で選んだものを overlay にも当てる）
+const THEMES           = ['studio', 'neon', 'minimal'];
+let currentTheme       = 'studio';
 // 接続ごとに増える番号。古いポーリングが新しい接続に混ざるのを防ぐ
 let pollGeneration     = 0;
 
@@ -815,6 +818,18 @@ async function handleHttp(req, res) {
     return;
   }
 
+  // ── API: テーマ変更（overlay に中継）
+  if (req.url === '/api/theme' && req.method === 'POST') {
+    const { theme } = parseJson(await readBody(req));
+    if (THEMES.includes(theme)) {
+      currentTheme = theme;
+      broadcast({ type: 'theme_update', theme });
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: THEMES.includes(theme), theme: currentTheme }));
+    return;
+  }
+
   // ── API: 配信サマリーを Discord WebHook に送る
   // 管理画面から直接送ると CSP / CORS で弾かれるのでサーバー経由にする
   if (req.url === '/api/discord' && req.method === 'POST') {
@@ -991,6 +1006,7 @@ const wsServer = net.createServer((socket) => {
       });
       // OBSのキャッシュ更新などでoverlayがつなぎ直したときも、サウンド設定を引き継ぐ
       if (soundSettings) sendTo(socket, { type: 'volume_update', ...soundSettings });
+      sendTo(socket, { type: 'theme_update', theme: currentTheme });
       return;
     }
 

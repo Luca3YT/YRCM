@@ -1,6 +1,6 @@
 # YRCM 引継ぎ書（claude.ai → Claude Code）
 
-最終更新: 2026-10-14 / 現在のバージョン: **v1.6.3**
+最終更新: 2026-10-14 / 現在のバージョン: **v1.7.0**
 
 ---
 
@@ -58,6 +58,7 @@ admin.html（管理画面）/ overlay.html（OBS）
 | `viewers_update` | admin | 視聴者数＋履歴配列 |
 | `session_summary` | admin | 配信サマリー（切断時） |
 | `volume_update` | overlay | 音量・サウンド種類・カスタム音源 |
+| `theme_update` | overlay | テーマ（studio / neon / minimal）。接続時にも送られる |
 | `yt_status` | admin | 接続状態変化 |
 | `sys_log` | admin | サーバー側エラーログ |
 | `reset` | admin / overlay | リセット |
@@ -73,6 +74,7 @@ admin.html（管理画面）/ overlay.html（OBS）
 | `POST /api/add` | 手動カウント加算（テストボタン・1〜100,000） |
 | `GET /api/viewers` | 視聴者数の手動取得 |
 | `POST /api/volume` | 音量・サウンド種類を overlay に中継（サーバーが最後の設定を保持し、overlay 接続時に送り直す） |
+| `POST /api/theme` | テーマを overlay に中継（サーバーが保持し、overlay 接続時にも送る） |
 | `POST /api/discord` | 配信サマリーを Discord WebHook に中継送信（discord.com の `/api/webhooks/` のみ許可） |
 | `GET /api/status` | 現在の状態（※未使用） |
 
@@ -101,7 +103,7 @@ admin.html（管理画面）/ overlay.html（OBS）
 - 目標リスト: タイトルクリックでモーダル。デフォルト値 `100,250,500,1000,1500,2000,2500,3000,4000,5000,7000,10000`
 - カード表示はクリア2・挑戦中1・未来2 の最大5件スライド表示
 - サウンド: 音量スライダー / ミュート / 種類5種（チャイム・ファンファーレ・ドラムロール・マジカル・ピンポン）+ カスタム音源
-- 設定カード: Discord WebHook URL を常設入力（localStorage 保存）
+- 設定カード: テーマ切替（スタジオ / ネオン / ミニマル）と Discord WebHook URL（どちらも localStorage 保存）
 - 配信サマリー: 「🎬 配信終了」で表示 → コピー / Discord送信 / 閉じる
 
 ### OBS オーバーレイ（overlay.html）
@@ -189,7 +191,14 @@ Electron のコンソールは Windows のコードページ制御が効かず `
 
 ブラウザで admin.html を開くと `electronAPI` 自体が未定義なので、`electronAPI?.xxx` だと ReferenceError で処理が止まる。
 
-### 10. main.js / preload.js を変更したらリビルド必須
+### 10. 色はテーマ変数だけで指定する（v1.7.0〜）
+
+admin.html の色は `:root` / `[data-theme="..."]` の CSS 変数（`--bg` `--card` `--accent` `--success` など）で決まる。薄い色は `--accent-soft` のように `color-mix()` で作っている。**直書きの色（#fff や rgba(255,255,255,.x)）を足すとテーマ切替で浮く**ので、新しいUIも変数で書くこと。
+overlay.html は `body[data-theme]` の `--t-*`（実績トースト）/ `--p-*`（進捗トースト）変数。
+`.card` は CLAUDE.md の指定どおりの1行を残し、hover用の border-color 遷移は別の `.card{...}` ルールで足している。
+admin.html の `<head>` にテーマ初期化用の `<script id="theme-boot">` がある（関数チェックの正規表現は `<script>` 完全一致なので影響なし）。
+
+### 11. main.js / preload.js を変更したらリビルド必須
 
 `server.js` / `admin.html` / `overlay.html` は `npm start` なら即反映されるが、EXE はいずれもリビルドが必要。
 
@@ -258,6 +267,7 @@ https://github.com/settings/tokens で classic トークンを発行（スコー
 
 | バージョン | 内容 |
 |------------|------|
+| v1.7.0 | デザイン一新・テーマ切替（スタジオ / ネオン / ミニマル）追加 |
 | v1.6.3 | バグ修正まとめ（下記「v1.6.3 の修正内容」参照） |
 | v1.6.2 | 配信コマンドカードの開閉不能・「切断」でサマリーが出る・サウンド種類がoverlayに反映されない問題を修正 |
 | v1.6.1 | Discord WebHook URL を設定カードに常設 |

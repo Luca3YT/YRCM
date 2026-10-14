@@ -1,6 +1,6 @@
 {
   "name": "reaction-milestone",
-  "version": "1.6.3",
+  "version": "1.7.0",
   "description": "YouTube Live リアクション実績解除オーバーレイ",
   "main": "main.js",
   "scripts": {
