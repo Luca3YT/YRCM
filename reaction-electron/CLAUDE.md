@@ -61,4 +61,5 @@ print('未定義:', called-defined-{'return','if','event','this'})
 - `npm start` の文字化けは Electron の仕様。EXE では化けないので放置でよい
 - WebSocket の再接続は `onclose` だけで行う（`onclose = onerror = ...` は接続が倍々に増える）
 - admin.html から Electron の API を呼ぶときは `window.electronAPI?.xxx`（ブラウザで開くと未定義で止まる）
+- UIに絵文字・光彩・色相グラデーション・「！」を入れない。アイコンは埋め込みの lucide、アクセントは琥珀色だけ（詳細は HANDOVER.md「デザインのルール」）
 - `main.js` / `preload.js` を変えたらリビルド必須

@@ -5,277 +5,132 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reaction Milestone Overlay</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Bebas+Neue&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
-  /* ══ テーマ（管理画面の設定から切り替わる） ══ */
-  body, body[data-theme="studio"] {
-    --t-bg: linear-gradient(140deg, #141d33 0%, #0e1527 100%);
-    --t-border: 1px solid #2a3758;
-    --t-shadow: 0 20px 60px rgba(0,0,0,.75), 0 0 0 1px rgba(255,122,61,.12);
-    --t-radius: 18px;
-    --t-text: #ffffff; --t-sub: rgba(232,236,246,.78); --t-muted: rgba(138,150,179,.9);
-    --t-stat-bg: rgba(255,255,255,.04); --t-stat-border: rgba(255,255,255,.07);
-    --t-label: #ff9a5c; --t-hot: #ff7a3d;
-    --t-line: linear-gradient(90deg, #ff5a2b, #ff9a5c, #ffc857, #ff9a5c, #ff5a2b);
-    --t-fill: linear-gradient(90deg, #ff7a3d, #ffc857);
-    --t-fill-glow: 0 0 8px rgba(255,140,60,.55);
-    --t-glow: radial-gradient(circle, rgba(255,122,61,.18) 0%, transparent 70%);
-    --t-num-font: 'Bebas Neue', sans-serif; --t-num-weight: 400;
-    --t-num-shadow: 0 0 30px rgba(255,140,60,.5);
-    --t-bar-bg: rgba(255,255,255,.08);
-    --p-label: #6aa8ff; --p-accent: #6aa8ff;
-    --p-line: linear-gradient(90deg, #3d7bff, #6aa8ff, #9cc6ff, #6aa8ff, #3d7bff);
-    --p-fill: linear-gradient(90deg, #3d7bff, #6aa8ff);
-    --p-fill-glow: 0 0 8px rgba(80,150,255,.5);
-    --p-num-shadow: 0 0 20px rgba(106,168,255,.35);
+  /* ══ テーマ（管理画面の設定から切り替わる） ══
+     配信画面の上に乗るので、面は落ち着いた無彩色。色はメーターの琥珀色だけ */
+  body, body[data-theme="graphite"] {
+    --t-bg: #19191b; --t-raised: #232325;
+    --t-line: rgba(237,237,237,.08); --t-line-strong: rgba(237,237,237,.14);
+    --t-text: #ededed; --t-sub: #a1a1a6; --t-muted: #85858b;
+    --t-accent: #f2a93b; --t-meter-off: rgba(237,237,237,.08);
+    --t-shadow: 0 16px 40px rgba(0,0,0,.45);
   }
-  body[data-theme="neon"] {
-    --t-bg: #0d0b16;
-    --t-border: 2px solid #ff3ea5;
-    --t-shadow: 0 0 28px rgba(255,62,165,.45), 0 20px 60px rgba(0,0,0,.8);
-    --t-radius: 16px;
-    --t-text: #ffffff; --t-sub: rgba(243,240,255,.8); --t-muted: rgba(161,151,196,.95);
-    --t-stat-bg: rgba(255,62,165,.06); --t-stat-border: rgba(255,62,165,.22);
-    --t-label: #2ee6ff; --t-hot: #ff3ea5;
-    --t-line: linear-gradient(90deg, #ff3ea5, #2ee6ff, #ff3ea5, #2ee6ff, #ff3ea5);
-    --t-fill: linear-gradient(90deg, #ff3ea5, #2ee6ff);
-    --t-fill-glow: 0 0 10px rgba(46,230,255,.7);
-    --t-glow: radial-gradient(circle, rgba(46,230,255,.18) 0%, transparent 70%);
-    --t-num-font: 'Bebas Neue', sans-serif; --t-num-weight: 400;
-    --t-num-shadow: 0 0 18px rgba(255,62,165,.85), 0 0 2px #fff;
-    --t-bar-bg: rgba(255,255,255,.08);
-    --p-label: #2ee6ff; --p-accent: #2ee6ff;
-    --p-line: linear-gradient(90deg, #2ee6ff, #8c7dff, #2ee6ff, #8c7dff, #2ee6ff);
-    --p-fill: linear-gradient(90deg, #8c7dff, #2ee6ff);
-    --p-fill-glow: 0 0 10px rgba(46,230,255,.7);
-    --p-num-shadow: 0 0 16px rgba(46,230,255,.75);
+  body[data-theme="warm"] {
+    --t-bg: #1c1a18; --t-raised: #262421;
+    --t-line: rgba(239,233,222,.08); --t-line-strong: rgba(239,233,222,.14);
+    --t-text: #efe9de; --t-sub: #aaa398; --t-muted: #8a847a;
+    --t-accent: #f2a93b; --t-meter-off: rgba(239,233,222,.08);
+    --t-shadow: 0 16px 40px rgba(0,0,0,.45);
   }
-  body[data-theme="minimal"] {
-    --t-bg: #fafafa;
-    --t-border: 1px solid #e4e4e7;
-    --t-shadow: 0 18px 48px rgba(0,0,0,.35);
-    --t-radius: 14px;
-    --t-text: #18181b; --t-sub: #3f3f46; --t-muted: #71717a;
-    --t-stat-bg: #f1f1f3; --t-stat-border: #e4e4e7;
-    --t-label: #ff3b30; --t-hot: #ff3b30;
-    --t-line: linear-gradient(90deg, #ff3b30, #ff3b30);
-    --t-fill: linear-gradient(90deg, #ff3b30, #ff3b30);
-    --t-fill-glow: none;
-    --t-glow: none;
-    --t-num-font: 'Noto Sans JP', sans-serif; --t-num-weight: 900;
-    --t-num-shadow: none;
-    --t-bar-bg: #e4e4e7;
-    --p-label: #18181b; --p-accent: #3f3f46;
-    --p-line: linear-gradient(90deg, #18181b, #18181b);
-    --p-fill: linear-gradient(90deg, #3f3f46, #18181b);
-    --p-fill-glow: none;
-    --p-num-shadow: none;
+  body[data-theme="light"] {
+    --t-bg: #ffffff; --t-raised: #f4f4f5;
+    --t-line: rgba(23,23,23,.08); --t-line-strong: rgba(23,23,23,.14);
+    --t-text: #171717; --t-sub: #525252; --t-muted: #737373;
+    --t-accent: #f2a93b; --t-meter-off: rgba(23,23,23,.08);
+    --t-shadow: 0 12px 32px rgba(0,0,0,.18);
   }
+  :root { --ease: cubic-bezier(.22,1,.36,1); --mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace; }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     background: transparent;
-    font-family: 'Noto Sans JP', sans-serif;
+    font-family: 'IBM Plex Sans JP', 'Yu Gothic UI', 'Meiryo', sans-serif;
     overflow: hidden;
     width: 100vw;
     height: 100vh;
   }
+  .ic { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 
-  /* ===== 実績トースト ===== */
-  #toast {
+  /* ===== トースト共通 ===== */
+  #toast, #progress-toast {
     position: fixed;
     bottom: 40px;
     right: 40px;
     width: 380px;
-    transform: translateX(460px);
-    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 9999;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity .4s var(--ease), transform .4s var(--ease);
     pointer-events: none;
   }
-  #toast.show { transform: translateX(0); }
-  #toast.hide {
-    transform: translateX(460px);
-    transition: transform 0.5s cubic-bezier(0.55, 0, 1, 0.45);
-  }
+  #toast { z-index: 9999; }
+  #progress-toast { z-index: 9998; /* 実績トーストより下 */ }
+  #toast.show, #progress-toast.show { opacity: 1; transform: translateY(0); }
+  #toast.hide, #progress-toast.hide { opacity: 0; transform: translateY(8px); transition-duration: .3s; }
 
-  .toast-inner {
+  .toast-inner, .progress-toast-inner {
     background: var(--t-bg);
-    border: var(--t-border);
-    border-radius: var(--t-radius);
-    padding: 18px 22px 16px;
+    border: 1px solid var(--t-line-strong);
+    border-radius: 16px;
+    padding: 20px 24px;
     box-shadow: var(--t-shadow);
     position: relative;
     overflow: hidden;
   }
+  /* 実績トーストだけ、上辺にアクセントの線（光らせない） */
   .toast-inner::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--t-line);
-    background-size: 200% 100%;
-    animation: shimmer 2s linear infinite;
-  }
-  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-  .toast-glow {
-    position: absolute;
-    top: -50px; right: -50px;
-    width: 150px; height: 150px;
-    background: var(--t-glow);
-    animation: pulseGlow 2s ease-in-out infinite alternate;
-  }
-  @keyframes pulseGlow { from { opacity: 0.5; transform: scale(0.9); } to { opacity: 1; transform: scale(1.1); } }
-
-  .toast-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .trophy-icon { font-size: 22px; animation: trophyBounce 0.6s ease-in-out 0.2s both; }
-  @keyframes trophyBounce {
-    0%, 100% { transform: scale(1) rotate(0deg); }
-    30% { transform: scale(1.4) rotate(-10deg); }
-    60% { transform: scale(1.2) rotate(5deg); }
-  }
-  .achievement-label {
-    font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
-    color: var(--t-label);
+    top: 0; left: 24px; right: 24px;
+    height: 2px;
+    background: var(--t-accent);
+    border-radius: 0 0 2px 2px;
   }
 
-  .milestone-number {
-    font-family: var(--t-num-font);
-    font-weight: var(--t-num-weight);
-    font-size: 54px;
+  .toast-header, .progress-toast-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .toast-header .ic { color: var(--t-accent); }
+  .progress-toast-header .ic { color: var(--t-muted); }
+  .achievement-label, .progress-label-text { font-size: 13px; font-weight: 500; color: var(--t-sub); }
+
+  .milestone-number, .progress-count {
+    font-weight: 600;
+    font-size: 56px;
     line-height: 1;
     color: var(--t-text);
-    text-shadow: var(--t-num-shadow);
-    letter-spacing: 2px;
+    letter-spacing: -.02em;
     font-variant-numeric: tabular-nums;
-    animation: countUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
   }
-  body[data-theme="minimal"] .milestone-number { font-size: 46px; letter-spacing: 0; }
-  @keyframes countUp { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .progress-count { font-size: 44px; font-weight: 500; }
+  #toast.show .milestone-number { animation: rise .5s var(--ease) .1s both; }
+  #progress-toast.show .progress-count { animation: rise .5s var(--ease) .1s both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-  .milestone-title { font-size: 13px; color: var(--t-sub); font-weight: 700; margin-top: 4px; margin-bottom: 12px; }
+  .milestone-title, .progress-sub { font-size: 14px; color: var(--t-sub); margin-top: 8px; }
+  .progress-sub strong { color: var(--t-text); font-weight: 500; font-family: var(--mono); }
 
-  .stats-row { display: flex; gap: 8px; margin-top: 4px; }
-  .stat-card {
-    flex: 1;
-    background: var(--t-stat-bg);
-    border: 1px solid var(--t-stat-border);
-    border-radius: 10px;
-    padding: 8px 10px;
-    text-align: center;
-    animation: fadeSlideUp 0.4s ease both;
+  /* 時速・経過・次の目標 */
+  .stats-row, .progress-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 16px;
+    border-top: 1px solid var(--t-line);
+    padding-top: 12px;
   }
-  .stat-card:nth-child(1) { animation-delay: 0.35s; }
-  .stat-card:nth-child(2) { animation-delay: 0.45s; }
-  .stat-card:nth-child(3) { animation-delay: 0.55s; }
-  @keyframes fadeSlideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .stat-card, .progress-stat { padding: 0 12px; border-left: 1px solid var(--t-line); }
+  .stat-card:first-child, .progress-stat:first-child { padding-left: 0; border-left: none; }
+  .stat-value, .progress-stat-value { font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--t-text); line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .stat-value.hot, .progress-stat-value.accent { color: var(--t-text); }
+  .stat-label, .progress-stat-label { font-size: 12px; color: var(--t-muted); margin-top: 4px; }
 
-  .stat-value { font-family: var(--t-num-font); font-weight: var(--t-num-weight); font-size: 22px; color: var(--t-text); line-height: 1; }
-  body[data-theme="minimal"] .stat-value { font-size: 17px; }
-  .stat-value.hot { color: var(--t-hot); }
-  .stat-label { font-size: 9px; color: var(--t-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
-
-  .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; border-radius: var(--t-radius); }
-  .particle { position: absolute; width: 4px; height: 4px; border-radius: 50%; animation: particleFly 1.2s ease-out both; }
-  @keyframes particleFly { 0% { transform: translate(0,0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; } }
-
-  .progress-section { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--t-stat-border); }
-  .progress-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--t-muted); margin-bottom: 5px; }
-  .progress-bar-bg { background: var(--t-bar-bg); border-radius: 4px; height: 4px; overflow: hidden; }
-  .progress-bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    background: var(--t-fill);
-    width: 0%;
-    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--t-fill-glow);
-  }
-
-  /* ===== 進捗トースト ===== */
-  #progress-toast {
-    position: fixed;
-    bottom: 40px;
-    right: 40px;
-    width: 380px;
-    transform: translateX(460px);
-    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 9998; /* 実績トーストより下 */
-    pointer-events: none;
-  }
-  #progress-toast.show { transform: translateX(0); }
-  #progress-toast.hide {
-    transform: translateX(460px);
-    transition: transform 0.5s cubic-bezier(0.55, 0, 1, 0.45);
-  }
-  /* 実績トーストが表示中は進捗トーストを少し上にずらす */
-  #toast.show ~ #progress-toast.show,
-  body.milestone-showing #progress-toast.show { bottom: 280px; }
-
-  .progress-toast-inner {
-    background: var(--t-bg);
-    border: var(--t-border);
-    border-radius: var(--t-radius);
-    padding: 16px 20px 14px;
-    box-shadow: var(--t-shadow);
-    position: relative;
+  /* シグネチャー: VUメーター風の目盛り付きバー */
+  .progress-section, .progress-bar-section { margin-top: 16px; }
+  .progress-label, .progress-bar-labels { display: flex; justify-content: space-between; font-size: 12px; font-family: var(--mono); color: var(--t-muted); margin-bottom: 8px; }
+  .progress-bar-bg, .progress-bar-bg2 {
+    height: 8px;
+    border-radius: 2px;
     overflow: hidden;
+    background: repeating-linear-gradient(90deg, var(--t-meter-off) 0 6px, transparent 6px 8px);
   }
-  body[data-theme="neon"] .progress-toast-inner { border-color: #2ee6ff; box-shadow: 0 0 26px rgba(46,230,255,.4), 0 20px 60px rgba(0,0,0,.8); }
-  .progress-toast-inner::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--p-line);
-    background-size: 200% 100%;
-    animation: shimmer 2.5s linear infinite;
-  }
-  .progress-toast-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .progress-icon { font-size: 18px; }
-  .progress-label-text { font-size: 10px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--p-label); }
-  .progress-count {
-    font-family: var(--t-num-font);
-    font-weight: var(--t-num-weight);
-    font-size: 46px;
-    line-height: 1;
-    color: var(--t-text);
-    text-shadow: var(--p-num-shadow);
-    letter-spacing: 2px;
-    font-variant-numeric: tabular-nums;
-    animation: countUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
-  }
-  body[data-theme="minimal"] .progress-count { font-size: 40px; letter-spacing: 0; }
-  .progress-sub { font-size: 12px; color: var(--t-muted); margin-top: 4px; margin-bottom: 10px; }
-  .progress-sub strong { color: var(--t-text); }
-  .progress-stats-row { display: flex; gap: 8px; margin-bottom: 12px; }
-  .progress-stat {
-    flex: 1;
-    background: var(--t-stat-bg);
-    border: 1px solid var(--t-stat-border);
-    border-radius: 10px;
-    padding: 7px 8px;
-    text-align: center;
-    animation: fadeSlideUp 0.4s ease both;
-  }
-  .progress-stat:nth-child(1) { animation-delay: 0.25s; }
-  .progress-stat:nth-child(2) { animation-delay: 0.35s; }
-  .progress-stat:nth-child(3) { animation-delay: 0.45s; }
-  .progress-stat-value { font-family: var(--t-num-font); font-weight: var(--t-num-weight); font-size: 20px; color: var(--t-text); line-height: 1; }
-  body[data-theme="minimal"] .progress-stat-value { font-size: 16px; }
-  .progress-stat-value.accent { color: var(--p-accent); }
-  .progress-stat-label { font-size: 9px; color: var(--t-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
-  .progress-bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--t-muted); margin-bottom: 5px; }
-  .progress-bar-bg2 { background: var(--t-bar-bg); border-radius: 4px; height: 6px; overflow: hidden; }
-  .progress-bar-fill2 {
+  .progress-bar-fill, .progress-bar-fill2 {
     height: 100%;
-    border-radius: 4px;
-    background: var(--p-fill);
     width: 0%;
-    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--p-fill-glow);
+    background: var(--t-accent);
+    -webkit-mask: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 8px);
+    mask: repeating-linear-gradient(90deg, #000 0 6px, transparent 6px 8px);
+    transition: width 1s var(--ease);
   }
-  .progress-pct { text-align: right; font-size: 11px; color: var(--p-accent); margin-top: 4px; font-family: var(--t-num-font); font-weight: var(--t-num-weight); letter-spacing: 1px; }
+  .progress-pct { text-align: right; font-size: 12px; font-family: var(--mono); color: var(--t-sub); margin-top: 8px; }
 
   /* ===== 接続インジケーター (OBSプレビュー用) ===== */
   #ws-indicator {
@@ -284,47 +139,51 @@
     left: 12px;
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-family: monospace;
-    font-size: 10px;
-    color: rgba(255,255,255,0.45);
-    background: rgba(0,0,0,0.45);
-    padding: 4px 10px;
-    border-radius: 20px;
-    transition: opacity 1s;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: rgba(255,255,255,.7);
+    background: rgba(0,0,0,.5);
+    padding: 4px 12px;
+    border-radius: 6px;
+    transition: opacity 1s var(--ease);
   }
   #ws-indicator.fade-out { opacity: 0; }
-  #ws-dot { width: 6px; height: 6px; border-radius: 50%; background: #444; }
-  #ws-dot.on { background: #00e676; box-shadow: 0 0 6px #00e676; }
-  #ws-dot.off { background: #ff1744; animation: blink 1s infinite; }
-  @keyframes blink { 50% { opacity: 0.3; } }
+  #ws-dot { width: 8px; height: 8px; border-radius: 50%; background: #85858b; }
+  #ws-dot.on { background: #4cc38a; }
+  #ws-dot.off { background: #e5484d; animation: blink 1.2s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity: .35; } }
 
   /* キャッシュ未更新警告（テーマに関係なく赤で目立たせる） */
   #cache-warning {
     position: fixed; inset: 0;
-    background: rgba(180, 0, 0, 0.55);
+    background: rgba(150, 20, 20, .55);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    z-index: 9999; transition: opacity 0.8s; pointer-events: none;
+    z-index: 9999; transition: opacity .8s var(--ease); pointer-events: none;
   }
   #cache-warning.hidden { opacity: 0; }
   #cache-warning-banner {
-    background: rgba(200,0,0,0.9); color: #fff;
-    font-size: 18px; font-weight: 700;
-    padding: 14px 32px; border-radius: 12px;
-    letter-spacing: 2px; text-align: center;
-    box-shadow: 0 4px 32px rgba(255,0,0,0.5);
-    animation: pulse-warn 1.5s infinite;
+    display: flex; align-items: center; gap: 12px;
+    background: #b42323; color: #fff;
+    font-size: 20px; font-weight: 500;
+    padding: 16px 32px; border-radius: 12px;
   }
-  #cache-warning-sub { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 10px; letter-spacing: 1px; }
-  @keyframes pulse-warn { 50% { opacity: 0.7; } }
+  #cache-warning-banner .ic { width: 24px; height: 24px; }
+  #cache-warning-sub { color: rgba(255,255,255,.85); font-size: 14px; margin-top: 12px; }
 </style>
 </head>
-<body data-theme="studio">
+<body data-theme="graphite">
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+<!-- アイコン: lucide (ISC License) https://lucide.dev -->
+<symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /> <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /> <path d="M4 22h16" /> <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /> <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /> <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /></symbol>
+<symbol id="i-gauge" viewBox="0 0 24 24"><path d="m12 14 4-4" /> <path d="M3.34 19a10 10 0 1 1 17.32 0" /></symbol>
+<symbol id="i-circle-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /> <line x1="12" x2="12" y1="8" y2="12" /> <line x1="12" x2="12.01" y1="16" y2="16" /></symbol>
+</svg>
 
-<!-- ① キャッシュ未更新警告オーバーレイ -->
+<!-- キャッシュ未更新警告オーバーレイ -->
 <div id="cache-warning">
-  <div id="cache-warning-banner">⚠️ OBS のキャッシュを更新してください</div>
+  <div id="cache-warning-banner"><svg class="ic"><use href="#i-circle-alert"/></svg>OBS のキャッシュを更新してください</div>
   <div id="cache-warning-sub">ブラウザソースを右クリック →「キャッシュを更新」</div>
 </div>
 
@@ -335,25 +194,22 @@
 
 <div id="toast">
   <div class="toast-inner">
-    <div class="toast-glow"></div>
-    <div class="particles" id="particles"></div>
-
     <div class="toast-header">
-      <span class="trophy-icon" id="trophy-icon">🏆</span>
-      <span class="achievement-label">Reaction Achievement</span>
+      <svg class="ic"><use href="#i-trophy"/></svg>
+      <span class="achievement-label">リアクション達成</span>
     </div>
 
-    <div class="milestone-number" id="milestone-num">1000</div>
-    <div class="milestone-title" id="milestone-title">🎉 リアクション 1,000 突破！</div>
+    <div class="milestone-number" id="milestone-num">1,000</div>
+    <div class="milestone-title" id="milestone-title">リアクションが 1,000 を超えました</div>
 
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-value hot" id="stat-speed">--</div>
-        <div class="stat-label">/ 時速</div>
+        <div class="stat-label">時速</div>
       </div>
       <div class="stat-card">
         <div class="stat-value" id="stat-elapsed">--</div>
-        <div class="stat-label">達成時間</div>
+        <div class="stat-label">達成まで</div>
       </div>
       <div class="stat-card">
         <div class="stat-value" id="stat-next">--</div>
@@ -375,8 +231,8 @@
 <div id="progress-toast">
   <div class="progress-toast-inner">
     <div class="progress-toast-header">
-      <span class="progress-icon">📊</span>
-      <span class="progress-label-text">Reaction Progress</span>
+      <svg class="ic"><use href="#i-gauge"/></svg>
+      <span class="progress-label-text">いまのリアクション</span>
     </div>
 
     <div class="progress-count" id="prog-count">0</div>
@@ -385,11 +241,11 @@
     <div class="progress-stats-row">
       <div class="progress-stat">
         <div class="progress-stat-value accent" id="prog-speed">--</div>
-        <div class="progress-stat-label">/ 時速</div>
+        <div class="progress-stat-label">時速</div>
       </div>
       <div class="progress-stat">
         <div class="progress-stat-value" id="prog-elapsed">--</div>
-        <div class="progress-stat-label">経過時間</div>
+        <div class="progress-stat-label">経過</div>
       </div>
       <div class="progress-stat">
         <div class="progress-stat-value" id="prog-next-val">--</div>
@@ -490,17 +346,14 @@ function playAchievementSound() {
   } catch (e) { console.error('sound error:', e); }
 }
 const MILESTONES = [100, 500, 1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 30000, 50000];
-const ICONS = { 100:'🌱', 500:'⭐', 1000:'🏆', 2000:'💫', 3000:'🔥', 5000:'👑', 7500:'💎', 10000:'🚀', 20000:'🌟', 50000:'🎆' };
 const DISPLAY_DURATION = 7000;
 
-// テーマごとの紙吹雪の色
-const PARTICLE_COLORS = {
-  studio : ['#ffc857', '#ff7a3d', '#ff5a2b', '#ffffff', '#ff9a5c'],
-  neon   : ['#ff3ea5', '#2ee6ff', '#8c7dff', '#ffffff', '#ff7cc4'],
-  minimal: ['#ff3b30', '#18181b', '#a1a1aa', '#ff3b30', '#52525b'],
-};
+// テーマ（管理画面の設定に合わせる）。旧テーマ名（v1.7.0）は読み替える
+const THEMES = ['graphite', 'warm', 'light'];
+const OLD_THEMES = { studio: 'graphite', neon: 'graphite', minimal: 'light' };
 function applyTheme(theme) {
-  if (PARTICLE_COLORS[theme]) document.body.dataset.theme = theme;
+  theme = OLD_THEMES[theme] || theme;
+  if (THEMES.includes(theme)) document.body.dataset.theme = theme;
 }
 
 let toastQueue = [];
@@ -609,14 +462,14 @@ function showToast(data) {
   const nextMilestone = MILESTONES[MILESTONES.indexOf(milestone) + 1];
 
   // 表示更新
-  document.getElementById('trophy-icon').textContent = ICONS[milestone] || '🎯';
   document.getElementById('milestone-num').textContent = milestone.toLocaleString();
-  document.getElementById('milestone-title').textContent = `🎉 リアクション ${milestone.toLocaleString()} 突破！`;
+  document.getElementById('milestone-title').textContent = `リアクションが ${milestone.toLocaleString()} を超えました`;
   document.getElementById('stat-speed').textContent = speed >= 10000 ? `${(speed/1000).toFixed(1)}k` : speed.toLocaleString();
   document.getElementById('stat-elapsed').textContent = formatElapsed(elapsedMs);
-  document.getElementById('stat-next').textContent = nextMilestone ? nextMilestone.toLocaleString() : 'MAX';
+  document.getElementById('stat-next').textContent = nextMilestone ? nextMilestone.toLocaleString() : '—';
   document.getElementById('prog-from').textContent = prevMilestone.toLocaleString();
-  document.getElementById('prog-to').textContent = nextMilestone ? nextMilestone.toLocaleString() : '∞';
+  // メーターは「前の節目 → 今回の節目」の区間（満タン＝この区間を達成）
+  document.getElementById('prog-to').textContent = milestone.toLocaleString();
 
   // 効果音再生
   playAchievementSound();
@@ -624,7 +477,6 @@ function showToast(data) {
   // 表示
   const toast = document.getElementById('toast');
   toast.className = 'show';
-  spawnParticles();
   setTimeout(() => { document.getElementById('progress-fill').style.width = '100%'; }, 100);
 
   clearTimeout(toastTimer);
@@ -643,18 +495,6 @@ function formatElapsed(ms) {
   if (h > 0) return `${h}h${m}m`;
   if (m > 0) return `${m}m${s}s`;
   return `${s}s`;
-}
-
-function spawnParticles() {
-  const container = document.getElementById('particles');
-  container.innerHTML = '';
-  const colors = PARTICLE_COLORS[document.body.dataset.theme] || PARTICLE_COLORS.studio;
-  for (let i = 0; i < 20; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.cssText = `left:${30+Math.random()*40}%;top:${20+Math.random()*40}%;background:${colors[i%colors.length]};--dx:${(Math.random()-0.5)*80}px;--dy:${-(20+Math.random()*60)}px;animation-delay:${Math.random()*0.3}s;animation-duration:${0.8+Math.random()*0.6}s;`;
-    container.appendChild(p);
-  }
 }
 
 // ===== 進捗トースト =====
@@ -677,18 +517,18 @@ function showProgressToast(data) {
   // 内容を更新
   document.getElementById('prog-count').textContent = count.toLocaleString();
   document.getElementById('prog-remaining').textContent =
-    nextM ? `あと ${remaining.toLocaleString()}` : 'MAX達成！🎆';
+    nextM ? `あと ${remaining.toLocaleString()}` : '';
   document.getElementById('prog-sub').innerHTML =
-    nextM ? `次の目標まで <strong id="prog-remaining">あと ${remaining.toLocaleString()}</strong>` : '🎆 全マイルストーン達成！';
+    nextM ? `次の目標まで <strong id="prog-remaining">あと ${remaining.toLocaleString()}</strong>` : 'すべてのマイルストーンを達成しました';
 
   document.getElementById('prog-speed').textContent =
     speed >= 10000 ? `${(speed/1000).toFixed(1)}k` : speed.toLocaleString();
   document.getElementById('prog-elapsed').textContent = formatElapsed(elapsedMs);
   document.getElementById('prog-next-val').textContent =
-    nextM ? nextM.toLocaleString() : 'MAX';
+    nextM ? nextM.toLocaleString() : '—';
 
   document.getElementById('prog-bar-from').textContent = prevM.toLocaleString();
-  document.getElementById('prog-bar-to').textContent = nextM ? nextM.toLocaleString() : '∞';
+  document.getElementById('prog-bar-to').textContent = nextM ? nextM.toLocaleString() : '—';
   document.getElementById('prog-pct').textContent = `${pct}%`;
 
   // 表示

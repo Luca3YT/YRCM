@@ -1,6 +1,6 @@
 # YRCM 引継ぎ書（claude.ai → Claude Code）
 
-最終更新: 2026-10-14 / 現在のバージョン: **v1.7.0**
+最終更新: 2026-10-14 / 現在のバージョン: **v1.8.0**
 
 ---
 
@@ -58,7 +58,7 @@ admin.html（管理画面）/ overlay.html（OBS）
 | `viewers_update` | admin | 視聴者数＋履歴配列 |
 | `session_summary` | admin | 配信サマリー（切断時） |
 | `volume_update` | overlay | 音量・サウンド種類・カスタム音源 |
-| `theme_update` | overlay | テーマ（studio / neon / minimal）。接続時にも送られる |
+| `theme_update` | overlay | テーマ（graphite / warm / light）。接続時にも送られる。v1.7.0 の studio / neon / minimal は読み替える |
 | `yt_status` | admin | 接続状態変化 |
 | `sys_log` | admin | サーバー側エラーログ |
 | `reset` | admin / overlay | リセット |
@@ -103,7 +103,7 @@ admin.html（管理画面）/ overlay.html（OBS）
 - 目標リスト: タイトルクリックでモーダル。デフォルト値 `100,250,500,1000,1500,2000,2500,3000,4000,5000,7000,10000`
 - カード表示はクリア2・挑戦中1・未来2 の最大5件スライド表示
 - サウンド: 音量スライダー / ミュート / 種類5種（チャイム・ファンファーレ・ドラムロール・マジカル・ピンポン）+ カスタム音源
-- 設定カード: テーマ切替（スタジオ / ネオン / ミニマル）と Discord WebHook URL（どちらも localStorage 保存）
+- 設定カード: テーマ切替（グラファイト / ウォーム / ライト）と Discord WebHook URL（どちらも localStorage 保存）
 - 配信サマリー: 「🎬 配信終了」で表示 → コピー / Discord送信 / 閉じる
 
 ### OBS オーバーレイ（overlay.html）
@@ -191,14 +191,23 @@ Electron のコンソールは Windows のコードページ制御が効かず `
 
 ブラウザで admin.html を開くと `electronAPI` 自体が未定義なので、`electronAPI?.xxx` だと ReferenceError で処理が止まる。
 
-### 10. 色はテーマ変数だけで指定する（v1.7.0〜）
+### 10. デザインのルール（v1.8.0〜）
 
-admin.html の色は `:root` / `[data-theme="..."]` の CSS 変数（`--bg` `--card` `--accent` `--success` など）で決まる。薄い色は `--accent-soft` のように `color-mix()` で作っている。**直書きの色（#fff や rgba(255,255,255,.x)）を足すとテーマ切替で浮く**ので、新しいUIも変数で書くこと。
-overlay.html は `body[data-theme]` の `--t-*`（実績トースト）/ `--p-*`（進捗トースト）変数。
-`.card` は CLAUDE.md の指定どおりの1行を残し、hover用の border-color 遷移は別の `.card{...}` ルールで足している。
+- 面はグレー（無彩色）、アクセントは琥珀色 `--accent` だけ。使うのは「リアクション数のメーター」「挑戦中の目標」「オーバーレイの達成トースト」など、見せ場に限る。赤 `--negative` は LIVE の点と危険な操作（切断・リセット）だけ
+- 絵文字は使わない。アイコンは lucide の線アイコンを `<symbol>` として HTML に埋め込み、`<svg class="ic"><use href="#i-名前"/></svg>` で使う（オフラインでも表示される）。新しいアイコンは lucide-static から同じ形で足す
+- 光彩（text-shadow / glow）、色相が変わるグラデーション、ループするアニメーションは入れない。ループしていいのは本当に生きている状態（LIVE の点、接続中）だけ
+- 太さは 400 / 500（強調で 600）。英字の大文字＋字間広めのラベルは使わない
+- 進捗は VUメーター風の目盛り付きバー（`.meter` / オーバーレイの `.progress-bar-*`）で統一
+- 文言に「！」を付けない。Discord に送るサマリー文面の絵文字は、メッセージの中身なので残している
+
+### 11. 色はテーマ変数だけで指定する（v1.7.0〜）
+
+admin.html の色は `:root` / `[data-theme="..."]` の CSS 変数（`--bg` `--card` `--raised` `--text` `--sub` `--muted` `--line` `--accent` `--positive` `--negative` など）で決まる。**直書きの色（#fff や rgba(255,255,255,.x)）を足すとテーマ切替で浮く**ので、新しいUIも変数で書くこと。
+overlay.html は `body[data-theme]` の `--t-*` 変数。
+`.card` は CLAUDE.md の指定どおりの1行を残し、`--border` は別の `.card{...}` ルールで `--line` を入れている。`padding:14px 16px` は4pxの倍数ではないが CLAUDE.md の固定値なので変えていない。
 admin.html の `<head>` にテーマ初期化用の `<script id="theme-boot">` がある（関数チェックの正規表現は `<script>` 完全一致なので影響なし）。
 
-### 11. main.js / preload.js を変更したらリビルド必須
+### 12. main.js / preload.js を変更したらリビルド必須
 
 `server.js` / `admin.html` / `overlay.html` は `npm start` なら即反映されるが、EXE はいずれもリビルドが必要。
 
@@ -282,6 +291,7 @@ https://github.com/settings/tokens で classic トークンを発行（スコー
 
 | バージョン | 内容 |
 |------------|------|
+| v1.8.0 | デザイン整理（unslop）・テーマを グラファイト / ウォーム / ライト に変更 |
 | v1.7.0 | デザイン一新・テーマ切替（スタジオ / ネオン / ミニマル）追加 |
 | v1.6.3 | バグ修正まとめ（下記「v1.6.3 の修正内容」参照） |
 | v1.6.2 | 配信コマンドカードの開閉不能・「切断」でサマリーが出る・サウンド種類がoverlayに反映されない問題を修正 |

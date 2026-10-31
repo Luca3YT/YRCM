@@ -76,8 +76,9 @@ let viewersHistory     = []; // 視聴者数履歴（グラフ用）最大200件
 // 最後に受け取ったサウンド設定（overlayが後から接続・再接続したときに送り直す）
 let soundSettings      = null; // { volume, soundType, customSoundB64 }
 // 見た目のテーマ（管理画面で選んだものを overlay にも当てる）
-const THEMES           = ['studio', 'neon', 'minimal'];
-let currentTheme       = 'studio';
+const THEMES           = ['graphite', 'warm', 'light'];
+const OLD_THEMES       = { studio: 'graphite', neon: 'graphite', minimal: 'light' }; // v1.7.0 の名前
+let currentTheme       = 'graphite';
 // 接続ごとに増える番号。古いポーリングが新しい接続に混ざるのを防ぐ
 let pollGeneration     = 0;
 
@@ -820,7 +821,8 @@ async function handleHttp(req, res) {
 
   // ── API: テーマ変更（overlay に中継）
   if (req.url === '/api/theme' && req.method === 'POST') {
-    const { theme } = parseJson(await readBody(req));
+    const body = parseJson(await readBody(req));
+    const theme = OLD_THEMES[body.theme] || body.theme;
     if (THEMES.includes(theme)) {
       currentTheme = theme;
       broadcast({ type: 'theme_update', theme });
